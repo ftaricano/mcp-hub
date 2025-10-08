@@ -1,0 +1,109 @@
+{
+  "servers": {
+    "trello": {
+      "command": "echo",
+      "args": ["mock-trello-server"],
+      "env": {
+        "TRELLO_API_KEY": "test_key",
+        "TRELLO_TOKEN": "test_token"
+      },
+      "enabled": true,
+      "timeout": 5000,
+      "retries": 3
+    },
+    "outlook-fernando": {
+      "command": "echo", 
+      "args": ["mock-outlook-server"],
+      "env": {
+        "MICROSOFT_GRAPH_CLIENT_ID": "test_id",
+        "MICROSOFT_GRAPH_CLIENT_SECRET": "test_secret",
+        "MICROSOFT_GRAPH_TENANT_ID": "test_tenant",
+        "TARGET_USER_EMAIL": "fernando@test.com"
+      },
+      "enabled": true,
+      "timeout": 5000,
+      "retries": 3
+    },
+    "outlook-faturamento": {
+      "command": "echo",
+      "args": ["mock-billing-server"],
+      "env": {
+        "MICROSOFT_GRAPH_CLIENT_ID": "test_id",
+        "MICROSOFT_GRAPH_CLIENT_SECRET": "test_secret", 
+        "MICROSOFT_GRAPH_TENANT_ID": "test_tenant",
+        "TARGET_USER_EMAIL": "billing@test.com"
+      },
+      "enabled": true,
+      "timeout": 5000,
+      "retries": 3
+    },
+    "spotify": {
+      "command": "echo",
+      "args": ["mock-spotify-server"],
+      "env": {
+        "SPOTIFY_CLIENT_ID": "test_spotify_id",
+        "SPOTIFY_CLIENT_SECRET": "test_spotify_secret"
+      },
+      "enabled": true,
+      "timeout": 5000,
+      "retries": 3
+    },
+    "onedrive-sharepoint": {
+      "command": "echo",
+      "args": ["mock-onedrive-server"],
+      "env": {
+        "MICROSOFT_GRAPH_CLIENT_ID": "test_id",
+        "MICROSOFT_GRAPH_CLIENT_SECRET": "test_secret",
+        "MICROSOFT_GRAPH_TENANT_ID": "test_tenant"
+      },
+      "enabled": true,
+      "timeout": 5000,
+      "retries": 3
+    },
+    "notion": {
+      "command": "echo",
+      "args": ["mock-notion-server"],
+      "env": {
+        "NOTION_API_KEY": "test_notion_key"
+      },
+      "enabled": true,
+      "timeout": 5000,
+      "retries": 3
+    },
+    "whatsapp": {
+      "command": "echo",
+      "args": ["mock-whatsapp-server"],
+      "env": {
+        "WHATSAPP_API_TOKEN": "test_token",
+        "WHATSAPP_PHONE_NUMBER_ID": "test_phone"
+      },
+      "enabled": true,
+      "timeout": 5000,
+      "retries": 3
+    },
+    "image-generator": {
+      "command": "echo",
+      "args": ["mock-image-server"],
+      "env": {},
+      "enabled": true,
+      "timeout": 10000,
+      "retries": 2
+    }
+  },
+  "hub": {
+    "cache": {
+      "enabled": true,
+      "ttl": 300,
+      "maxSize": 1000
+    },
+    "monitoring": {
+      "enabled": true,
+      "metricsInterval": 30000
+    },
+    "performance": {
+      "maxConcurrentRequests": 10,
+      "requestTimeout": 30000,
+      "retryAttempts": 3
+    }
+  }
+}
