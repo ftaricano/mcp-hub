@@ -1,6 +1,6 @@
 # MCP Hub - Revolutionary Model Context Protocol Proxy
 
-A revolutionary proxy server that consolidates **147+ tools from 8+ MCP servers** into just **4 universal commands** with groundbreaking Portuguese Language Intelligence system, completely bypassing client-side tool limitations while providing AI-optimized, natural language access to all your productivity services.
+A revolutionary proxy server that consolidates **125+ tools from 6 MCP servers** into just **4 universal commands** with groundbreaking Portuguese Language Intelligence system, completely bypassing client-side tool limitations while providing AI-optimized, natural language access to all your productivity services.
 
 ## 🌟 Revolutionary Impact
 
@@ -9,7 +9,7 @@ A revolutionary proxy server that consolidates **147+ tools from 8+ MCP servers*
 **THE SOLUTION**: MCP Hub acts as an intelligent proxy with revolutionary Portuguese Language Intelligence, exposing only 4 tools to clients while providing AI-optimized natural language access to unlimited tools from unlimited servers behind the scenes.
 
 ### 🎯 Key Benefits
-- **🚀 Unlimited Tools**: Access 147+ tools through just 4 universal commands
+- **🚀 Unlimited Tools**: Access 125+ tools through just 4 universal commands
 - **🧠 Portuguese Language Intelligence**: Revolutionary AI system with intent analysis and natural language processing
 - **⚡ Smart Search**: Context-aware tool discovery with confidence scoring and Portuguese optimization
 - **📊 Intelligent Recommendations**: Category-based tool suggestions with usage analytics
@@ -22,17 +22,14 @@ A revolutionary proxy server that consolidates **147+ tools from 8+ MCP servers*
 | Server | Status | Tools | Hub Compatible | Notes |
 |--------|--------|-------|----------------|-------|
 | **trello** | ✅ Active | 23 | ✅ Full | Project management, SPARC methodology |
-| **outlook-fernando** | ✅ Active | 20 | ✅ Full | Personal email operations |
-| **outlook-faturamento** | ✅ Active | 20 | ✅ Full | Billing email operations |
+| **outlook-fernando** | ✅ Active | 39 | ✅ Full | Personal email operations |
 | **spotify** | ✅ Active | 28 | ✅ Full | Music control, playlists, recommendations |
-| **onedrive-sharepoint** | ✅ Active | 23 | ✅ Full | File operations, Excel integration |
 | **notion** | ✅ Active | 10 | ✅ Full | Knowledge management, pages |
 | **youtube** | ✅ Active | 18 | ✅ Full | Search, upload, analytics, transcription |
-| **whatsapp** | ✅ Active | 5 | ✅ Full | Business messaging automation |
 | **image-generator** | ✅ Active | 3 | ✅ Full | AI image generation, model optimization |
-| **github** | ❌ Disabled | 0 | ❌ No | Excluded per user request |
+| **codex** | ✅ Active | 4 | ✅ Full | AI code assistant, chat, execution |
 
-**TOTAL**: **147+ tools** consolidated into **4 universal commands** (2 intelligent + 2 core)
+**TOTAL**: **125+ tools** consolidated into **4 universal commands** (2 intelligent + 2 core)
 
 ## 🏗️ Architecture Overview
 
@@ -41,8 +38,8 @@ A revolutionary proxy server that consolidates **147+ tools from 8+ MCP servers*
 │   MCP Client    │    │    MCP Hub       │    │  Individual     │
 │   (Claude/      │◄──►│   (Proxy)        │◄──►│  MCP Servers    │
 │    Cursor)      │    │                  │    │                 │
-│                 │    │ • 4 Tools Only   │    │ • 147+ Tools    │
-│ • No tool limit│    │ • AI Intelligence│    │ • 8+ Servers    │
+│                 │    │ • 4 Tools Only   │    │ • 125+ Tools    │
+│ • No tool limit│    │ • AI Intelligence│    │ • 6 Servers     │
 │ • Simple config │    │ • PT Language AI │    │ • Full Features │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
@@ -104,7 +101,7 @@ Add **ONLY** the Hub to your MCP client configuration:
 }
 ```
 
-**That's it!** You now have access to 147+ tools through just 4 commands with revolutionary Portuguese Language Intelligence.
+**That's it!** You now have access to 125+ tools through just 4 commands with revolutionary Portuguese Language Intelligence.
 
 ## ⚙️ Advanced Configuration
 
@@ -208,7 +205,7 @@ DEBUG=mcp-hub:*
 
 ## 🛠️ The 4 Universal Tools
 
-The MCP Hub provides 4 powerful tools that give you access to all 147+ underlying tools through different approaches:
+The MCP Hub provides 4 powerful tools that give you access to all 125+ underlying tools through different approaches:
 
 ### 🧠 Intelligent Tools (Portuguese Language AI-Optimized)
 
@@ -616,8 +613,8 @@ Real-time intelligence metrics showing system effectiveness:
 ```json
 {
   "intelligence_metrics": {
-    "total_tools": 147,
-    "active_servers": 8,
+    "total_tools": 125,
+    "active_servers": 6,
     "categories": 7,
     "avg_confidence": 0.91,
     "portuguese_accuracy": 0.96,
@@ -850,13 +847,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Before MCP Hub:
 - ❌ Limited to 40 tools per MCP client
-- ❌ Complex tool discovery and selection 
+- ❌ Complex tool discovery and selection
 - ❌ No natural language interface
 - ❌ Manual tool management across multiple servers
 - ❌ No Portuguese language optimization
 
 ### After MCP Hub with Intelligence:
-- ✅ **147+ tools through just 4 commands**
+- ✅ **125+ tools through just 4 commands**
 - ✅ **Natural Portuguese language queries** ("enviar email", "tocar música")
 - ✅ **AI-powered intent analysis** with 96% accuracy
 - ✅ **Context-aware recommendations** based on usage patterns

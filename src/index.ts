@@ -62,109 +62,92 @@ class MCPHub {
     // Tool 1: list-all-tools
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       try {
-        logger.info('Handling list-all-tools request');
-        
-        // TODO: Get tools from registry
-        const mockTools: ListToolsResponse = {
-          total: 2,
-          items: [
-            {
-              server_id: 'hub',
-              server_name: 'MCP Hub',
-              tool_name: 'list-all-tools',
-              description: 'List all available tools from registered MCP servers',
-              schema: {
-                type: 'object',
-                properties: {
-                  query: { type: 'string', description: 'Filter tools by query' },
-                  tags: { type: 'array', items: { type: 'string' }, description: 'Filter by tags' },
-                  server_id: { type: 'string', description: 'Filter by server ID' },
-                  limit: { type: 'number', default: 50, description: 'Maximum results' },
-                  offset: { type: 'number', default: 0, description: 'Results offset' },
-                },
-              },
-              tags: ['hub', 'core'],
-              enabled: true,
-              last_seen: new Date(),
+        logger.info('Handling ListToolsRequest - returning ALL tools from registry');
+
+        // Get ALL tools from registered servers
+        let allServerTools = this.registry.getAllTools();
+
+        logger.info(`Found ${allServerTools.length} tools from registered servers`);
+
+        // Convert registry tools to MCP SDK format
+        const serverTools = allServerTools.map(tool => {
+          // Ensure schema has type: "object"
+          const schema = tool.schema || {};
+          return {
+            name: `mcp__${tool.server_id}__${tool.tool_name}`,
+            description: tool.description,
+            inputSchema: {
+              type: 'object' as const,
+              ...(schema.properties ? { properties: schema.properties } : {}),
+              ...(schema.required ? { required: schema.required } : {}),
             },
-            {
-              server_id: 'hub',
-              server_name: 'MCP Hub',
-              tool_name: 'call-tool',
-              description: 'Call any tool from any registered MCP server',
-              schema: {
-                type: 'object',
-                properties: {
-                  server_id: { type: 'string', description: 'ID of the target server' },
-                  tool_name: { type: 'string', description: 'Name of the tool to call' },
-                  arguments: { type: 'object', description: 'Arguments for the tool' },
-                },
-                required: ['server_id', 'tool_name'],
+          };
+        });
+
+        // Hub's own tools
+        const hubTools = [
+          {
+            name: 'list-all-tools',
+            description: 'List all available tools from registered MCP servers',
+            inputSchema: {
+              type: 'object' as const,
+              properties: {
+                query: { type: 'string', description: 'Filter tools by query' },
+                tags: { type: 'array', items: { type: 'string' }, description: 'Filter by tags' },
+                server_id: { type: 'string', description: 'Filter by server ID' },
+                limit: { type: 'number', default: 50, description: 'Maximum results' },
+                offset: { type: 'number', default: 0, description: 'Results offset' },
               },
-              tags: ['hub', 'core'],
-              enabled: true,
-              last_seen: new Date(),
             },
-          ],
-          has_more: false,
-        };
+          },
+          {
+            name: 'call-tool',
+            description: 'Call any tool from any registered MCP server',
+            inputSchema: {
+              type: 'object' as const,
+              properties: {
+                server_id: { type: 'string', description: 'ID of the target server' },
+                tool_name: { type: 'string', description: 'Name of the tool to call' },
+                arguments: { type: 'object', description: 'Arguments for the tool' },
+              },
+              required: ['server_id', 'tool_name'],
+            },
+          },
+          {
+            name: 'smart-search',
+            description: 'Busca inteligente de ferramentas em português com análise de intenção e recomendações contextuais',
+            inputSchema: {
+              type: 'object' as const,
+              properties: {
+                query: { type: 'string', description: 'Consulta em português (ex: "enviar email", "tocar música", "criar tarefa")' },
+                context: { type: 'string', description: 'Contexto adicional (opcional)' },
+                limit: { type: 'number', default: 5, description: 'Máximo de resultados' },
+              },
+              required: ['query'],
+            },
+          },
+          {
+            name: 'get-recommendations',
+            description: 'Obtém recomendações e ferramentas relacionadas baseadas no uso e contexto',
+            inputSchema: {
+              type: 'object' as const,
+              properties: {
+                category: { type: 'string', description: 'Categoria (Comunicação, Entretenimento, Produtividade, etc.)' },
+                recent: { type: 'boolean', default: false, description: 'Mostrar ferramentas usadas recentemente' },
+                popular: { type: 'boolean', default: true, description: 'Mostrar ferramentas populares' },
+              },
+            },
+          },
+        ];
+
+        // Combine hub tools + all server tools
+        const allTools = [...hubTools, ...serverTools] as any[];
+
+        logger.info(`Returning ${allTools.length} total tools (4 hub + ${serverTools.length} from servers)`);
 
         return {
-          tools: [
-            {
-              name: 'list-all-tools',
-              description: 'List all available tools from registered MCP servers',
-              inputSchema: {
-                type: 'object',
-                properties: {
-                  query: { type: 'string', description: 'Filter tools by query' },
-                  tags: { type: 'array', items: { type: 'string' }, description: 'Filter by tags' },
-                  server_id: { type: 'string', description: 'Filter by server ID' },
-                  limit: { type: 'number', default: 50, description: 'Maximum results' },
-                  offset: { type: 'number', default: 0, description: 'Results offset' },
-                },
-              },
-            },
-            {
-              name: 'call-tool',
-              description: 'Call any tool from any registered MCP server',
-              inputSchema: {
-                type: 'object',
-                properties: {
-                  server_id: { type: 'string', description: 'ID of the target server' },
-                  tool_name: { type: 'string', description: 'Name of the tool to call' },
-                  arguments: { type: 'object', description: 'Arguments for the tool' },
-                },
-                required: ['server_id', 'tool_name'],
-              },
-            },
-            {
-              name: 'smart-search',
-              description: 'Busca inteligente de ferramentas em português com análise de intenção e recomendações contextuais',
-              inputSchema: {
-                type: 'object',
-                properties: {
-                  query: { type: 'string', description: 'Consulta em português (ex: "enviar email", "tocar música", "criar tarefa")' },
-                  context: { type: 'string', description: 'Contexto adicional (opcional)' },
-                  limit: { type: 'number', default: 5, description: 'Máximo de resultados' },
-                },
-                required: ['query'],
-              },
-            },
-            {
-              name: 'get-recommendations',
-              description: 'Obtém recomendações e ferramentas relacionadas baseadas no uso e contexto',
-              inputSchema: {
-                type: 'object',
-                properties: {
-                  category: { type: 'string', description: 'Categoria (Comunicação, Entretenimento, Produtividade, etc.)' },
-                  recent: { type: 'boolean', default: false, description: 'Mostrar ferramentas usadas recentemente' },
-                  popular: { type: 'boolean', default: true, description: 'Mostrar ferramentas populares' },
-                },
-              },
-            },
-          ],
-        } satisfies ListToolsResult;
+          tools: allTools,
+        };
       } catch (error) {
         logger.error('Error in list-all-tools:', error);
         throw new HubError('Failed to list tools', 'LIST_TOOLS_ERROR');
