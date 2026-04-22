@@ -6,16 +6,16 @@ MCP gateway that consolidates multiple servers behind a smaller, AI-friendly too
 
 ## Why this exists
 
-Some MCP clients become hard to use when too many tools are exposed at once. This project sits in front of several MCP servers and presents a smaller shared interface for discovery and execution.
+Some MCP setups become hard to operate once you have several servers, overlapping tools, and no shared discovery layer. This project sits in front of multiple MCP servers and adds a hub-native workflow for discovery, routing, and recommendations.
 
 In practice, the hub is useful when you want to:
-- reduce the number of tools visible to the client,
+- browse a combined catalog of tools across servers,
 - route calls to multiple MCP servers from one entry point,
 - add lightweight discovery and recommendation workflows on top of registered servers.
 
 ## What it does
 
-The hub registers downstream MCP servers, reads their tools, and exposes four hub-level commands:
+The hub registers downstream MCP servers, reads their tools, and adds four hub-native commands:
 - `list-all-tools` to browse the combined tool catalog,
 - `call-tool` to execute a tool on a selected server,
 - `smart-search` to search for tools from a natural-language query,
