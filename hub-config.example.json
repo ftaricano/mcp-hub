@@ -8,10 +8,17 @@
       "env": {
         "DOCS_API_KEY": "replace_with_real_secret_if_needed"
       },
+      "envFile": "/absolute/path/to/your-docs-mcp/.env",
+      "inheritEnv": ["DOCS_REGION"],
       "protocol": "stdio",
       "enabled": true,
       "timeout": 30000,
       "retries": 2,
+      "toolCallRetries": {
+        "enabled": true,
+        "maxAttempts": 2,
+        "retryableTools": ["search_docs"]
+      },
       "tags": ["docs", "knowledge"]
     },
     {
@@ -22,10 +29,16 @@
       "env": {
         "ISSUE_TRACKER_TOKEN": "replace_with_real_secret_if_needed"
       },
+      "inheritEnv": ["ISSUE_TRACKER_REGION"],
       "protocol": "stdio",
       "enabled": true,
       "timeout": 30000,
       "retries": 2,
+      "toolCallRetries": {
+        "enabled": true,
+        "maxAttempts": 2,
+        "retryableTools": ["list_issues"]
+      },
       "tags": ["tickets", "projects"]
     }
   ],

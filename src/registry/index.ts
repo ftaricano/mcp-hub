@@ -1,5 +1,5 @@
 import { readFile } from 'fs/promises';
-import { spawn, ChildProcess } from 'child_process';
+import { ChildProcess } from 'child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
@@ -10,11 +10,32 @@ import processManager from '../utils/process-manager.js';
 
 const logger = createLogger();
 
+const DEFAULT_ENV_ALLOWLIST = [
+  'HOME',
+  'HOMEDRIVE',
+  'HOMEPATH',
+  'LANG',
+  'LC_ALL',
+  'LOGNAME',
+  'PATH',
+  'PATHEXT',
+  'SHELL',
+  'SystemRoot',
+  'SYSTEMROOT',
+  'TEMP',
+  'TERM',
+  'TMP',
+  'TMPDIR',
+  'USER',
+  'USERNAME',
+] as const;
+
 export class ServerRegistry {
   private servers: Map<string, ServerConfig> = new Map();
   private tools: Map<string, ToolMetadata[]> = new Map();
   private connections: Map<string, { client: Client; process?: ChildProcess }> = new Map();
   private lastUpdate: Map<string, Date> = new Map();
+  private readonly defaultEnvAllowlist = [...DEFAULT_ENV_ALLOWLIST];
 
   constructor(private configPath?: string) {}
 
@@ -163,7 +184,7 @@ export class ServerRegistry {
           }
         );
 
-        // Enhanced transport configuration with proper environment inheritance
+        // Build a scoped environment for the downstream MCP process.
         const transportConfig: { 
           command: string; 
           args?: string[]; 
@@ -171,16 +192,7 @@ export class ServerRegistry {
         } = {
           command: config.command,
           args: config.args || [],
-        };
-        
-        // Load environment variables from the server's .env file
-        const serverEnv = loadServerEnv(serverId);
-        
-        // Merge environment variables properly
-        transportConfig.env = {
-          ...(process.env as Record<string, string>), // Inherit system environment
-          ...serverEnv,  // Load from server's .env file
-          ...(config.env || {}),  // Override with config-specific vars if provided
+          env: this.buildServerEnvironment(serverId, config),
         };
         
         const transport = new StdioClientTransport(transportConfig);
@@ -320,9 +332,9 @@ export class ServerRegistry {
 
     const connection = await this.getConnection(serverId);
     const serverConfig = this.servers.get(serverId);
-    const maxAttempts = Math.max(1, (serverConfig?.retries ?? 2) + 1);
+    const maxAttempts = this.resolveToolCallAttempts(serverConfig, toolName);
     let lastError: unknown;
-    
+
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         const response = await connection.client.callTool({
@@ -334,17 +346,64 @@ export class ServerRegistry {
         return response;
       } catch (error) {
         lastError = error;
-        logger.error('Tool call failed:', { serverId, toolName, attempt, error });
+        logger.error('Tool call failed:', {
+          serverId,
+          toolName,
+          attempt,
+          willRetry: attempt < maxAttempts,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
 
         if (attempt < maxAttempts) {
           const delay = Math.min(100 * Math.pow(2, attempt - 1), 1000);
           await new Promise(resolve => setTimeout(resolve, delay));
-          continue;
         }
       }
     }
 
     throw new ConnectionError(serverId, `Tool call failed: ${lastError instanceof Error ? lastError.message : 'Unknown error'}`);
+  }
+
+  private buildServerEnvironment(serverId: string, config: ServerConfig): Record<string, string> {
+    const inheritedEnv = this.pickInheritedEnvironment(config.inheritEnv || []);
+    const serverEnv = loadServerEnv(serverId, config.envFile);
+
+    return {
+      ...inheritedEnv,
+      ...serverEnv,
+      ...(config.env || {}),
+    };
+  }
+
+  private pickInheritedEnvironment(extraEnvKeys: string[]): Record<string, string> {
+    const inheritedEnv: Record<string, string> = {};
+    const allowedKeys = Array.from(new Set<string>([
+      ...this.defaultEnvAllowlist,
+      ...extraEnvKeys.filter((key): key is string => typeof key === 'string' && key.length > 0),
+    ]));
+
+    for (const envKey of allowedKeys) {
+      const envValue = process.env[envKey];
+      if (envValue !== undefined) {
+        inheritedEnv[envKey] = envValue;
+      }
+    }
+
+    return inheritedEnv;
+  }
+
+  private resolveToolCallAttempts(serverConfig: ServerConfig | undefined, toolName: string): number {
+    const policy = serverConfig?.toolCallRetries;
+    if (!policy?.enabled) {
+      return 1;
+    }
+
+    const retryableTools = policy.retryableTools || [];
+    if (!retryableTools.includes(toolName)) {
+      return 1;
+    }
+
+    return Math.max(1, policy.maxAttempts || 1);
   }
 
   private validateToolArguments(serverId: string, toolName: string, args: Record<string, unknown>): void {

@@ -57,10 +57,17 @@ Minimal example:
       "env": {
         "DOCS_API_KEY": "replace_with_real_secret_if_needed"
       },
+      "envFile": "/absolute/path/to/your-docs-mcp/.env",
+      "inheritEnv": ["DOCS_REGION"],
       "protocol": "stdio",
       "enabled": true,
       "timeout": 30000,
       "retries": 2,
+      "toolCallRetries": {
+        "enabled": true,
+        "maxAttempts": 2,
+        "retryableTools": ["search_docs"]
+      },
       "tags": ["docs", "knowledge"]
     }
   ],
@@ -114,6 +121,8 @@ MCP Hub adds four hub-native commands on top of the downstream servers you regis
 - `HUB_CONFIG` can point to any JSON file matching the hub config shape.
 - If `HUB_CONFIG` is not set, the hub also attempts to discover `hub-config.json` in common local paths.
 - Registered servers can use `stdio` or `http` entries.
+- Downstream stdio servers only inherit a small runtime-safe environment baseline (`PATH`, temp/home/shell locale essentials). Use `inheritEnv` to pass through additional parent variables explicitly, and `env`/`envFile` for server-specific credentials.
+- Tool calls do not retry by default. To opt in safely for known-idempotent tools, use `toolCallRetries.retryableTools` with an explicit `maxAttempts`.
 - The hub only exposes what you configure; no downstream MCP is bundled automatically.
 
 ## Typical use cases

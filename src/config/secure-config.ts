@@ -15,11 +15,18 @@ const ServerConfigSchema = z.object({
   command: z.string().optional(),
   args: z.array(z.string()).default([]),
   env: z.record(z.string()).default({}),
+  envFile: z.string().optional(),
+  inheritEnv: z.array(z.string()).default([]),
   protocol: z.enum(['stdio', 'http']).default('stdio'),
   url: z.string().optional(),
   enabled: z.boolean().default(true),
   timeout: z.number().default(60000),
   retries: z.number().default(3),
+  toolCallRetries: z.object({
+    enabled: z.boolean().default(false),
+    maxAttempts: z.number().min(1).default(1),
+    retryableTools: z.array(z.string()).default([]),
+  }).optional(),
   tags: z.array(z.string()).default([]),
 });
 

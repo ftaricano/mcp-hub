@@ -18,11 +18,18 @@ export interface ServerConfig {
   command: string;
   args: string[];
   env?: Record<string, string>;
+  envFile?: string;
+  inheritEnv?: string[];
   protocol: 'stdio' | 'http';
   url?: string;
   enabled: boolean;
   timeout?: number;
   retries?: number;
+  toolCallRetries?: {
+    enabled?: boolean;
+    maxAttempts?: number;
+    retryableTools?: string[];
+  };
   tags?: string[];
 }
 
