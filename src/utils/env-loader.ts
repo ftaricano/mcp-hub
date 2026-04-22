@@ -2,6 +2,39 @@ import { readFileSync, existsSync } from 'fs';
 import { parse } from 'dotenv';
 import { logger } from './logger.js';
 
+function normalizeServerIdForEnv(serverId: string): string {
+  return serverId
+    .replace(/[^a-zA-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .toUpperCase();
+}
+
+function resolveEnvPath(serverId: string): string {
+  const normalizedServerId = normalizeServerIdForEnv(serverId);
+  const genericEnvVar = `MCP_${normalizedServerId}_ENV_PATH`;
+
+  const legacyAliases: Record<string, string[]> = {
+    'outlook-fernando': ['MCP_EMAIL_ENV_PATH'],
+    'outlook-faturamento': ['MCP_EMAIL_ENV_PATH'],
+    'onedrive-sharepoint': ['MCP_ONEDRIVE_ENV_PATH'],
+  };
+
+  const candidateEnvVars = [
+    genericEnvVar,
+    ...(legacyAliases[serverId] || []),
+  ];
+
+  for (const envVar of candidateEnvVars) {
+    const envPath = process.env[envVar];
+    if (envPath) {
+      logger.debug(`Using ${envVar} for server environment`, { serverId, envVar, envPath });
+      return envPath;
+    }
+  }
+
+  return '';
+}
+
 /**
  * Load environment variables from a .env file path
  * @param envPath Path to the .env file
@@ -31,21 +64,9 @@ export function loadEnvFromPath(envPath: string): Record<string, string> {
  * @returns Object with environment variables
  */
 export function loadServerEnv(serverId: string): Record<string, string> {
-  const envPathMapping: Record<string, string> = {
-    'outlook-fernando': process.env.MCP_EMAIL_ENV_PATH || '',
-    'outlook-faturamento': process.env.MCP_EMAIL_ENV_PATH || '',
-    'trello': process.env.MCP_TRELLO_ENV_PATH || '',
-    'spotify': process.env.MCP_SPOTIFY_ENV_PATH || '',
-    'youtube': process.env.MCP_YOUTUBE_ENV_PATH || '',
-    'github': process.env.MCP_GITHUB_ENV_PATH || '',
-    'notion': process.env.MCP_NOTION_ENV_PATH || '',
-    'whatsapp': process.env.MCP_WHATSAPP_ENV_PATH || '',
-    'onedrive-sharepoint': process.env.MCP_ONEDRIVE_ENV_PATH || '',
-  };
-
-  const envPath = envPathMapping[serverId];
+  const envPath = resolveEnvPath(serverId);
   if (!envPath) {
-    logger.warn(`No environment path configured for server: ${serverId}`);
+    logger.warn(`No environment path configured for server: ${serverId}. Set MCP_${normalizeServerIdForEnv(serverId)}_ENV_PATH to enable per-server .env loading.`);
     return {};
   }
 

@@ -221,14 +221,25 @@ jobs:
       env:
         NODE_ENV: test
         LOG_LEVEL: error
+
+    - name: Upload coverage artifact
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: coverage/
+        retention-days: 30
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      id: codecov
+      uses: codecov/codecov-action@v5
+      continue-on-error: true
       with:
         files: ./coverage/lcov.info
         flags: unittests
         name: mcp-hub-coverage
-        fail_ci_if_error: true
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
     
     - name: Coverage Summary
       run: |
@@ -236,7 +247,20 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "| Metric | Coverage |" >> $GITHUB_STEP_SUMMARY
         echo "|--------|----------|" >> $GITHUB_STEP_SUMMARY
-        npm run coverage:summary >> $GITHUB_STEP_SUMMARY
+        node - <<'NODE' >> $GITHUB_STEP_SUMMARY
+        const fs = require('node:fs');
+        const path = 'coverage/coverage-summary.json';
+        const summary = JSON.parse(fs.readFileSync(path, 'utf8')).total;
+        for (const key of ['lines', 'statements', 'functions', 'branches']) {
+          console.log(`| ${key[0].toUpperCase()}${key.slice(1)} | ${summary[key].pct}% |`);
+        }
+        NODE
+
+    - name: Codecov status note
+      if: steps.codecov.outcome != 'success'
+      run: |
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Codecov upload did not complete successfully, but coverage artifacts were generated and uploaded with this workflow run." >> $GITHUB_STEP_SUMMARY
 
   # Job 7: Security Audit
   security-audit:

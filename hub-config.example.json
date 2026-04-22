@@ -1,0 +1,44 @@
+{
+  "servers": [
+    {
+      "id": "docs-server",
+      "name": "Documentation MCP Server",
+      "command": "node",
+      "args": ["/absolute/path/to/your-docs-mcp/dist/index.js"],
+      "env": {
+        "DOCS_API_KEY": "replace_with_real_secret_if_needed"
+      },
+      "protocol": "stdio",
+      "enabled": true,
+      "timeout": 30000,
+      "retries": 2,
+      "tags": ["docs", "knowledge"]
+    },
+    {
+      "id": "issue-tracker",
+      "name": "Issue Tracker MCP Server",
+      "command": "node",
+      "args": ["/absolute/path/to/your-issue-tracker-mcp/dist/index.js"],
+      "env": {
+        "ISSUE_TRACKER_TOKEN": "replace_with_real_secret_if_needed"
+      },
+      "protocol": "stdio",
+      "enabled": true,
+      "timeout": 30000,
+      "retries": 2,
+      "tags": ["tickets", "projects"]
+    }
+  ],
+  "cache": {
+    "enabled": true,
+    "ttl": 300000
+  },
+  "security": {
+    "rate_limit": 100,
+    "validate_schemas": true
+  },
+  "logging": {
+    "level": "info",
+    "format": "json"
+  }
+}

@@ -41,11 +41,14 @@ describe('Hub Server Communication Integration', () => {
     serverRegistry = new ServerRegistry();
     hubCache = new HubCache(300, true); // 5 minute TTL, enabled
     
-    // Mock registry methods to use our mock server manager
-    vi.spyOn(serverRegistry, 'callTool').mockImplementation(
-      async (serverId: string, toolName: string, args: any) => {
-        return mockServerManager.simulateServerCall(serverId, toolName, args);
-      }
+    // Mock registry connections to use our mock server manager while preserving callTool logic
+    vi.spyOn(serverRegistry, 'getConnection').mockImplementation(
+      async (serverId: string) => ({
+        client: {
+          callTool: async ({ name, arguments: args }: { name: string; arguments?: Record<string, unknown> }) => 
+            mockServerManager.simulateServerCall(serverId, name, args ?? {})
+        } as any
+      })
     );
     
     vi.spyOn(serverRegistry, 'getAllTools').mockReturnValue([
@@ -334,21 +337,22 @@ describe('Hub Server Communication Integration', () => {
     it('deve implementar retry automático para falhas temporárias', async () => {
       let callCount = 0;
       
-      // Mock intermittent failures
-      vi.spyOn(serverRegistry, 'callTool').mockImplementation(async (serverId, toolName, args) => {
-        callCount++;
-        
-        if (callCount <= 2) {
-          throw new Error('Temporary network error');
-        }
-        
-        return mockServerManager.simulateServerCall(serverId, toolName, args);
+      vi.spyOn(serverRegistry, 'getConnection').mockResolvedValue({
+        client: {
+          callTool: async () => {
+            callCount++;
+            if (callCount <= 2) {
+              throw new Error('Temporary network error');
+            }
+
+            return mockServerManager.simulateServerCall('trello', 'get_boards', {});
+          }
+        } as any
       });
       
-      // Should succeed after retries
       const result = await serverRegistry.callTool('trello', 'get_boards', {});
       expect(result).toBeDefined();
-      expect(callCount).toBeGreaterThan(2);
+      expect(callCount).toBe(3);
     });
 
     it('deve aplicar circuit breaker após muitas falhas consecutivas', async () => {
@@ -382,7 +386,11 @@ describe('Hub Server Communication Integration', () => {
         const toolName = serverId === 'trello' ? 'get_boards' :
                         serverId === 'outlook-fernando' ? 'list_emails' : 'search_tracks';
         
-        operations.push(serverRegistry.callTool(serverId, toolName, { test: i }));
+        operations.push(serverRegistry.callTool(
+          serverId,
+          toolName,
+          serverId === 'spotify' ? { query: `focus-${i}` } : { test: i }
+        ));
       }
       
       const startTime = performance.now();

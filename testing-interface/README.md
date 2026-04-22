@@ -1,18 +1,22 @@
-# 🧪 MCP Hub Testing Interface
+# MCP Hub Testing Interface
 
-Interface web interativa para testar e visualizar todas as ferramentas do MCP Hub.
+Interactive web UI for exploring and testing the tools exposed by MCP Hub.
 
-## 📋 Características
+## What it is for
 
-- **Dashboard**: Visão geral de todos os servidores e ferramentas
-- **Explorador de Servidores**: Status detalhado de cada servidor MCP
-- **Navegador de Ferramentas**: Busca e filtragem de 105+ ferramentas
-- **Testador Interativo**: Execute ferramentas com parâmetros customizados
-- **Interface Moderna**: Design dark mode responsivo
+The testing interface helps you:
 
-## 🚀 Início Rápido
+- inspect registered MCP servers,
+- browse the aggregated tool catalog,
+- filter tools by server, category, or query,
+- execute tools with custom parameters,
+- validate your own hub configuration during development.
 
-### 1. Instalar Dependências
+It is generic to whatever downstream MCP servers your local `hub-config.json` registers.
+
+## Quick start
+
+### 1. Install dependencies
 
 ```bash
 # Backend
@@ -24,166 +28,153 @@ cd ../frontend
 npm install
 ```
 
-### 2. Iniciar Servidores
+### 2. Start the interface
 
-**Opção A: Iniciar Ambos (Recomendado)**
+Option A — start both services:
+
 ```bash
-# Na raiz do testing-interface
 npm run dev
 ```
 
-**Opção B: Iniciar Separadamente**
+Option B — start separately:
+
 ```bash
-# Terminal 1 - Backend (porta 3000)
+# Terminal 1
 cd backend
 npm run dev
 
-# Terminal 2 - Frontend (porta 5173)
+# Terminal 2
 cd frontend
 npm run dev
 ```
 
-### 3. Acessar Interface
+### 3. Open the UI
 
-Abra seu navegador em: **http://localhost:5173**
+Visit: http://localhost:5173
 
-## 📡 API Backend
+## Backend API
 
-O backend roda na porta **3000** e expõe os seguintes endpoints:
+The backend runs on port 3000.
 
-### Servidores
-- `GET /api/servers` - Lista todos os servidores
-- `GET /api/servers/:serverId/tools` - Ferramentas de um servidor
+### Servers
+- `GET /api/servers` — list all configured servers
+- `GET /api/servers/:serverId/tools` — list tools for a server
 
-### Ferramentas
-- `GET /api/tools` - Lista todas as ferramentas
-- `GET /api/tools/:serverId/:toolName` - Detalhes de uma ferramenta
+### Tools
+- `GET /api/tools` — list all aggregated tools
+- `GET /api/tools/:serverId/:toolName` — get tool details
 
-### Execução
-- `POST /api/execute` - Executa uma ferramenta
-  ```json
-  {
-    "serverId": "spotify",
-    "toolName": "search_tracks",
-    "parameters": {
-      "query": "focus music",
-      "limit": 5
-    }
+### Execution
+- `POST /api/execute` — execute a tool
+
+Example request:
+
+```json
+{
+  "serverId": "docs-server",
+  "toolName": "search_documents",
+  "parameters": {
+    "query": "onboarding",
+    "limit": 5
   }
-  ```
-
-### Saúde
-- `GET /api/health` - Status do servidor
-
-## 🏗️ Arquitetura
-
+}
 ```
+
+### Health
+- `GET /api/health` — backend health status
+
+## Architecture
+
+```text
 testing-interface/
-├── backend/                 # API Express + TypeScript
+├── backend/                 # Express + TypeScript API
 │   ├── src/
-│   │   ├── server.ts       # Servidor principal
-│   │   ├── routes/         # Rotas da API
-│   │   ├── integration/    # Integração com Hub
-│   │   └── types/          # Definições TypeScript
+│   │   ├── server.ts
+│   │   ├── routes/
+│   │   ├── integration/
+│   │   └── types/
 │   └── package.json
-│
 ├── frontend/               # React + Vite + TypeScript
 │   ├── src/
-│   │   ├── App.tsx        # Componente principal
-│   │   ├── components/     # Componentes UI
-│   │   ├── lib/           # Cliente API
-│   │   └── App.css        # Estilos
+│   │   ├── App.tsx
+│   │   ├── components/
+│   │   ├── lib/
+│   │   └── App.css
 │   └── package.json
-│
 └── README.md
 ```
 
-## 🎨 Componentes Frontend
+## Frontend capabilities
 
 ### Dashboard
-Visão geral com estatísticas:
-- Servidores ativos/conectados
-- Total de ferramentas por categoria
-- Distribuição por servidor
-- Status de saúde em tempo real
+Overview of:
+- active / connected servers,
+- total tool count,
+- distribution by server,
+- health indicators.
 
-### ServerList
-Lista detalhada de servidores:
-- Status de conexão
-- Número de ferramentas
-- Informações de protocolo
-- Indicadores de saúde
+### Server list
+Per-server visibility into:
+- connection status,
+- tool count,
+- protocol,
+- health state.
 
-### ToolBrowser
-Explorador de ferramentas com:
-- Busca por nome/descrição
-- Filtros por categoria e servidor
-- Cards informativos
-- Navegação para teste
+### Tool browser
+Browse with:
+- search by name or description,
+- filters by server and category,
+- tool cards,
+- quick navigation into testing.
 
-### ToolTester
-Interface de teste interativo:
-- Formulário dinâmico baseado em schema
-- Suporte para todos os tipos de parâmetros
-- Execução e visualização de resultados
-- Tratamento de erros
+### Tool tester
+Interactive execution with:
+- schema-driven forms,
+- support for different parameter types,
+- result rendering,
+- error display.
 
-## 🔧 Desenvolvimento
+## Development
 
 ### Backend
+
 ```bash
 cd backend
-npm run dev      # Desenvolvimento com hot reload
-npm run build    # Build TypeScript
-npm start        # Produção
+npm run dev
+npm run build
+npm start
 ```
 
 ### Frontend
+
 ```bash
 cd frontend
-npm run dev      # Desenvolvimento (Vite)
-npm run build    # Build para produção
-npm run preview  # Preview do build
+npm run dev
+npm run build
+npm run preview
 ```
 
-## 🌐 Servidores Suportados
+## Notes
 
-Atualmente a interface suporta os **6 servidores ativos** do MCP Hub:
+- The backend can use mock data during initial UI development.
+- For real hub integration, point it at a real MCP Hub instance and configured `hub-config.json`.
+- The interface is intentionally server-agnostic and should work with any MCP mix exposed by the hub.
 
-1. **spotify** - 26 ferramentas (música e playlists)
-2. **outlook-fernando** - 39 ferramentas (email)
-3. **youtube** - 18 ferramentas (vídeos e analytics)
-4. **trello** - 23 ferramentas (gerenciamento de projetos)
-5. **notion** - 10 ferramentas (documentação)
-6. **codex** - 4 ferramentas (AI assistant)
+## Troubleshooting
 
-**Total**: **105+ ferramentas consolidadas**
+Backend will not start:
+- verify port 3000 is free,
+- install dependencies.
 
-## 📝 Notas
+Frontend will not connect:
+- verify the backend is running on http://localhost:3000,
+- check backend CORS settings.
 
-- Backend usa dados mock para demonstração inicial
-- Para integração real com Hub, descomentar código em `HubClient`
-- Frontend otimizado para dark mode
-- Interface totalmente responsiva (mobile-friendly)
+Tools do not appear:
+- inspect backend logs,
+- confirm `hub-config.json` contains enabled downstream servers,
+- confirm the hub can connect to those downstream MCP servers.
 
-## 🐛 Troubleshooting
-
-**Backend não inicia?**
-- Verifique se a porta 3000 está livre
-- Confirme que as dependências foram instaladas
-
-**Frontend não conecta ao backend?**
-- Verifique se backend está rodando em http://localhost:3000
-- Confira configuração de CORS no backend
-
-**Ferramentas não aparecem?**
-- Verifique logs do backend para erros
-- Confirme que `hub-config.json` está configurado corretamente
-
-## 📄 Licença
+## License
 
 MIT
-
-## 👤 Autor
-
-Fernando Taricano

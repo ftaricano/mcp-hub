@@ -30,6 +30,34 @@ import {
 const config = loadConfig();
 const logger = createLogger(config.logging.level, config.logging.format);
 
+function inferCacheContext(serverId: string, toolName: string, description?: string, tags?: string[]): string {
+  const tokens = [serverId, toolName, description || '', ...(tags || [])]
+    .join(' ')
+    .toLowerCase();
+
+  if (/(email|mail|inbox|outlook|message)/.test(tokens)) {
+    return 'email';
+  }
+
+  if (/(music|song|track|playlist|audio)/.test(tokens)) {
+    return 'music';
+  }
+
+  if (/(project|task|ticket|board|issue|card|kanban)/.test(tokens)) {
+    return 'project';
+  }
+
+  if (/(doc|docs|wiki|knowledge|note|notebook|page)/.test(tokens)) {
+    return 'knowledge';
+  }
+
+  if (/(file|document|storage|drive|sharepoint|onedrive)/.test(tokens)) {
+    return 'files';
+  }
+
+  return 'general';
+}
+
 class MCPHub {
   private server: Server;
   private registry: ServerRegistry;
@@ -319,9 +347,16 @@ class MCPHub {
       intelligentCache.recordToolUsage(toolKey, responseTime, true);
       
       // Cache result in intelligent cache with context
-      const context = params.server_id.includes('outlook') ? 'email' :
-                     params.server_id === 'spotify' ? 'music' :
-                     params.server_id === 'trello' ? 'project' : 'general';
+      const serverConfig = this.registry.getServerConfig(params.server_id);
+      const toolMetadata = this.registry
+        .getServerTools(params.server_id)
+        .find(tool => tool.tool_name === params.tool_name);
+      const context = inferCacheContext(
+        params.server_id,
+        params.tool_name,
+        toolMetadata?.description || serverConfig?.name,
+        toolMetadata?.tags || serverConfig?.tags
+      );
       intelligentCache.set(toolKey + '_' + argsHash, result, undefined, context);
       
       logger.info('Tool call successful:', { 

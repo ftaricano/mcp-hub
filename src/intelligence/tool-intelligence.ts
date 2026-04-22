@@ -39,8 +39,86 @@ export interface ToolIntelligence {
 export class ToolIntelligenceSystem {
   private static intelligence: Map<string, ToolIntelligence> = new Map();
 
+  private static normalizeText(text: string): string {
+    return text
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  private static tokenize(text: string): string[] {
+    return this.normalizeText(text)
+      .replace(/[^\p{L}\p{N}\s_-]/gu, ' ')
+      .replace(/[_-]/g, ' ')
+      .split(/\s+/)
+      .filter(token => token.length > 1);
+  }
+
+  private static levenshteinDistance(a: string, b: string): number {
+    if (a === b) return 0;
+    if (!a.length) return b.length;
+    if (!b.length) return a.length;
+
+    const matrix = Array.from({ length: a.length + 1 }, (_, index) => Array(b.length + 1).fill(0));
+
+    for (let i = 0; i <= a.length; i++) {
+      matrix[i]![0] = i;
+    }
+
+    for (let j = 0; j <= b.length; j++) {
+      matrix[0]![j] = j;
+    }
+
+    for (let i = 1; i <= a.length; i++) {
+      for (let j = 1; j <= b.length; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        matrix[i]![j] = Math.min(
+          matrix[i - 1]![j]! + 1,
+          matrix[i]![j - 1]! + 1,
+          matrix[i - 1]![j - 1]! + cost
+        );
+      }
+    }
+
+    return matrix[a.length]![b.length]!;
+  }
+
+  private static isFuzzyMatch(queryToken: string, candidateToken: string): boolean {
+    if (queryToken === candidateToken) return true;
+    if (queryToken.includes(candidateToken) || candidateToken.includes(queryToken)) return true;
+
+    if (queryToken.length < 4 || candidateToken.length < 4) {
+      return false;
+    }
+
+    const maxDistance = Math.max(1, Math.floor(Math.min(queryToken.length, candidateToken.length) / 4));
+    return this.levenshteinDistance(queryToken, candidateToken) <= maxDistance;
+  }
+
+  private static scoreTokenMatches(queryTokens: string[], candidateTokens: string[], exactWeight: number, fuzzyWeight: number): number {
+    let score = 0;
+
+    for (const queryToken of queryTokens) {
+      for (const candidateToken of candidateTokens) {
+        if (queryToken === candidateToken) {
+          score += exactWeight;
+          break;
+        }
+
+        if (this.isFuzzyMatch(queryToken, candidateToken)) {
+          score += fuzzyWeight;
+          break;
+        }
+      }
+    }
+
+    return score;
+  }
+
   // Configuração de inteligência para cada ferramenta
   static initialize(): void {
+    this.intelligence.clear();
     // === EMAIL TOOLS ===
     // Outlook Fernando
     this.addIntelligence({
@@ -87,12 +165,38 @@ export class ToolIntelligenceSystem {
       ],
       typical_params: ['to', 'subject', 'body', 'attachments'],
       success_indicators: ['Email enviado com sucesso'],
-      related_tools: ['list_emails', 'send_email_with_file'],
+      related_tools: ['list_emails', 'reply_to_email', 'send_email_with_file'],
       performance_score: 9,
       reliability_score: 9,
       complexity_level: 'basic',
       context_triggers: ['enviar email', 'mandar mensagem', 'email fernando'],
       intent_patterns: ['envie', 'mande', 'enviar para', 'comunicar']
+    });
+
+    this.addIntelligence({
+      server_id: 'outlook-fernando',
+      tool_name: 'reply_to_email',
+      category: 'Comunicação',
+      subcategory: 'Email',
+      action_type: 'update',
+      pt_name: 'Responder Email',
+      pt_description: 'Responde emails existentes mantendo o contexto da conversa',
+      pt_keywords: ['responder', 'resposta', 'reply', 'email', 'mensagem', 'caixa de entrada'],
+      en_keywords: ['reply', 'respond', 'email', 'message'],
+      use_cases: [
+        'Responder email urgente',
+        'Dar retorno para cliente',
+        'Continuar conversa por email'
+      ],
+      typical_params: ['messageId', 'message', 'replyAll'],
+      success_indicators: ['Resposta enviada com sucesso'],
+      related_tools: ['list_emails', 'send_email'],
+      follows_tool: ['list_emails'],
+      performance_score: 9,
+      reliability_score: 9,
+      complexity_level: 'basic',
+      context_triggers: ['responder email', 'reply email', 'retornar mensagem'],
+      intent_patterns: ['responda', 'responder', 'retorne', 'reply']
     });
 
     // Outlook Faturamento
@@ -260,12 +364,14 @@ export class ToolIntelligenceSystem {
       action_type: 'search',
       pt_name: 'Buscar Páginas Notion',
       pt_description: 'Busca páginas no workspace Notion',
-      pt_keywords: ['notion', 'páginas', 'buscar', 'documentos', 'notas', 'conhecimento'],
+      pt_keywords: ['notion', 'páginas', 'pagina', 'buscar', 'documentos', 'notas', 'conhecimento', 'base', 'tópico', 'conteúdo', 'informações'],
       en_keywords: ['notion', 'pages', 'search', 'documents', 'notes'],
       use_cases: [
         'Encontrar documentação',
         'Buscar notas específicas',
-        'Localizar projeto'
+        'Localizar projeto',
+        'Pesquisar por tópico',
+        'Consultar base de conhecimento'
       ],
       typical_params: ['query', 'page_size'],
       success_indicators: ['Páginas encontradas'],
@@ -274,7 +380,32 @@ export class ToolIntelligenceSystem {
       reliability_score: 8,
       complexity_level: 'basic',
       context_triggers: ['buscar notion', 'páginas', 'documentação'],
-      intent_patterns: ['busque', 'procure', 'encontre', 'ache']
+      intent_patterns: ['busque', 'procure', 'encontre', 'ache', 'pesquise']
+    });
+
+    this.addIntelligence({
+      server_id: 'notion',
+      tool_name: 'create_page',
+      category: 'Conhecimento',
+      subcategory: 'Documentação',
+      action_type: 'create',
+      pt_name: 'Criar Página Notion',
+      pt_description: 'Cria nova página ou documento no workspace Notion',
+      pt_keywords: ['notion', 'pagina', 'página', 'criar', 'nova página', 'documentar', 'documentação', 'notas', 'organizar', 'estruturar', 'template', 'conteúdo', 'informações'],
+      en_keywords: ['notion', 'create', 'page', 'document', 'notes'],
+      use_cases: [
+        'Criar documentação de projeto',
+        'Registrar reunião ou relatório',
+        'Organizar informações em página'
+      ],
+      typical_params: ['parent_id', 'title', 'content'],
+      success_indicators: ['Página criada com sucesso'],
+      related_tools: ['search_pages'],
+      performance_score: 8,
+      reliability_score: 8,
+      complexity_level: 'basic',
+      context_triggers: ['criar página notion', 'documentar no notion', 'nova página notion'],
+      intent_patterns: ['crie', 'criar', 'documente', 'registre']
     });
 
     // === WHATSAPP TOOLS ===
@@ -446,48 +577,164 @@ export class ToolIntelligenceSystem {
 
   // Busca inteligente com suporte a português
   static smartSearch(query: string, context?: string): ToolIntelligence[] {
-    const lowerQuery = query.toLowerCase();
+    const normalizedQuery = this.normalizeText(query);
+    if (!normalizedQuery) return [];
+
+    const queryTokens = this.tokenize(query);
+    const normalizedContext = context ? this.normalizeText(context) : undefined;
     const results: ToolIntelligence[] = [];
+
+    const actionIntentMap: Record<ToolIntelligence['action_type'], string[]> = {
+      create: ['criar', 'enviar', 'adicionar', 'fazer', 'gerar', 'responder', 'mandar', 'documentar'],
+      read: ['listar', 'ver', 'mostrar', 'buscar', 'procurar'],
+      update: ['atualizar', 'editar', 'responder', 'marcar', 'retornar'],
+      delete: ['apagar', 'deletar', 'excluir', 'remover'],
+      search: ['buscar', 'procurar', 'encontrar', 'pesquisar'],
+      control: ['tocar', 'reproduzir', 'pausar', 'continuar', 'aumentar', 'colocar'],
+      analyze: ['analisar', 'explicar', 'ajudar']
+    };
+
+    const categoryTokenMap: Record<string, string[]> = {
+      'Comunicação': ['email', 'emails', 'mensagem', 'mensagens', 'whatsapp', 'mail'],
+      'Entretenimento': ['musica', 'spotify', 'playlist', 'faixa', 'track'],
+      'Produtividade': ['trello', 'tarefa', 'tarefas', 'projeto', 'card', 'board'],
+      'Arquivos': ['arquivo', 'arquivos', 'documento', 'documentos', 'pasta', 'sharepoint', 'onedrive'],
+      'Conhecimento': ['notion', 'pagina', 'paginas', 'documentacao', 'notas', 'conhecimento', 'base'],
+      'Criação': ['imagem', 'arte', 'foto']
+    };
+
+    const domainRules = [
+      {
+        tokens: ['email', 'emails', 'mensagem', 'mensagens', 'inbox', 'caixa', 'mail'],
+        matches: (intel: ToolIntelligence) => intel.server_id.includes('outlook') || intel.subcategory === 'Email',
+        boost: 100,
+        penalty: -30
+      },
+      {
+        tokens: ['whatsapp', 'zap', 'wpp'],
+        matches: (intel: ToolIntelligence) => intel.server_id === 'whatsapp' || intel.subcategory === 'Mensagens',
+        boost: 110,
+        penalty: -35
+      },
+      {
+        tokens: ['musica', 'spotify', 'playlist', 'faixa', 'track', 'song'],
+        matches: (intel: ToolIntelligence) => intel.server_id === 'spotify' || intel.subcategory === 'Música',
+        boost: 90,
+        penalty: -25
+      },
+      {
+        tokens: ['trello', 'tarefa', 'tarefas', 'projeto', 'card', 'board'],
+        matches: (intel: ToolIntelligence) => intel.server_id === 'trello' || intel.category === 'Produtividade',
+        boost: 85,
+        penalty: -20
+      },
+      {
+        tokens: ['arquivo', 'arquivos', 'documento', 'documentos', 'pasta', 'sharepoint', 'onedrive'],
+        matches: (intel: ToolIntelligence) => intel.server_id.includes('onedrive') || intel.category === 'Arquivos',
+        boost: 90,
+        penalty: -25
+      },
+      {
+        tokens: ['notion', 'pagina', 'paginas', 'documentacao', 'notas', 'conteudo', 'informacoes', 'conhecimento', 'base', 'topico'],
+        matches: (intel: ToolIntelligence) => intel.server_id === 'notion' || intel.category === 'Conhecimento',
+        boost: 95,
+        penalty: -25
+      }
+    ];
 
     for (const intel of this.intelligence.values()) {
       let score = 0;
+      const toolTokens = Array.from(new Set([
+        ...this.tokenize(intel.pt_name),
+        ...this.tokenize(intel.pt_description),
+        ...intel.pt_keywords.flatMap(keyword => this.tokenize(keyword)),
+        ...intel.en_keywords.flatMap(keyword => this.tokenize(keyword)),
+        ...intel.use_cases.flatMap(useCase => this.tokenize(useCase)),
+        ...intel.context_triggers.flatMap(trigger => this.tokenize(trigger)),
+        ...intel.intent_patterns.flatMap(pattern => this.tokenize(pattern)),
+        ...this.tokenize(intel.tool_name),
+        ...this.tokenize(intel.category),
+        ...this.tokenize(intel.subcategory),
+        ...this.tokenize(intel.server_id)
+      ]));
 
-      // Match exato em nomes portugueses (peso alto)
-      if (intel.pt_name.toLowerCase() === lowerQuery) score += 100;
-      
-      // Match em palavras-chave portuguesas (peso alto)
-      if (intel.pt_keywords.some(kw => kw === lowerQuery)) score += 80;
-      
-      // Match em padrões de intenção (peso alto)
-      if (intel.intent_patterns.some(pattern => lowerQuery.includes(pattern))) score += 70;
-      
-      // Match em contexto (peso médio)
-      if (intel.context_triggers.some(trigger => lowerQuery.includes(trigger))) score += 60;
-      
-      // Match parcial em descrição portuguesa (peso médio)
-      if (intel.pt_description.toLowerCase().includes(lowerQuery)) score += 50;
-      
-      // Match em casos de uso (peso médio)
-      if (intel.use_cases.some(useCase => useCase.toLowerCase().includes(lowerQuery))) score += 40;
-      
-      // Match em palavras-chave inglesas (peso baixo)
-      if (intel.en_keywords.some(kw => kw.includes(lowerQuery))) score += 30;
-      
-      // Match parcial em nome da ferramenta (peso baixo)
-      if (intel.tool_name.toLowerCase().includes(lowerQuery)) score += 20;
+      const normalizedPtName = this.normalizeText(intel.pt_name);
+      const normalizedDescription = this.normalizeText(intel.pt_description);
 
-      // Contexto adicional
-      if (context) {
-        if (intel.category.toLowerCase().includes(context.toLowerCase())) score += 25;
-        if (intel.subcategory.toLowerCase().includes(context.toLowerCase())) score += 15;
+      if (normalizedPtName === normalizedQuery) score += 100;
+      if (normalizedDescription.includes(normalizedQuery) || normalizedQuery.includes(normalizedDescription)) score += 40;
+      if (this.normalizeText(intel.tool_name).includes(normalizedQuery)) score += 25;
+
+      score += this.scoreTokenMatches(queryTokens, toolTokens, 24, 11);
+
+      if (intel.intent_patterns.some(pattern => normalizedQuery.includes(this.normalizeText(pattern)))) score += 70;
+      if (intel.context_triggers.some(trigger => normalizedQuery.includes(this.normalizeText(trigger)))) score += 60;
+      if (intel.use_cases.some(useCase => this.normalizeText(useCase).includes(normalizedQuery))) score += 40;
+
+      if (actionIntentMap[intel.action_type].some(action => queryTokens.includes(this.normalizeText(action)))) {
+        score += 35;
+      }
+
+      if ((categoryTokenMap[intel.category] || []).some(token => queryTokens.includes(token))) {
+        score += 30;
+      }
+
+      for (const rule of domainRules) {
+        if (rule.tokens.some(token => queryTokens.includes(token))) {
+          score += rule.matches(intel) ? rule.boost : rule.penalty;
+        }
+      }
+
+      const wantsSearch = ['buscar', 'procurar', 'encontrar', 'listar', 'ver', 'mostrar', 'pesquisar'].some(token => queryTokens.includes(token));
+      const wantsCreate = ['criar', 'enviar', 'adicionar', 'fazer', 'mandar', 'documentar'].some(token => queryTokens.includes(token));
+      const isEmailQuery = ['email', 'emails', 'mensagem', 'mensagens', 'mail'].some(token => queryTokens.includes(token));
+      const isProjectQuery = ['trello', 'tarefa', 'tarefas', 'projeto', 'card', 'board'].some(token => queryTokens.includes(token));
+      const isFileQuery = ['arquivo', 'arquivos', 'documento', 'documentos', 'pasta', 'sharepoint', 'onedrive'].some(token => queryTokens.includes(token));
+      const isKnowledgeQuery = ['notion', 'pagina', 'paginas', 'documentacao', 'notas', 'conhecimento', 'base', 'topico'].some(token => queryTokens.includes(token));
+
+      if (isEmailQuery && wantsSearch && (intel.server_id.includes('outlook') || intel.subcategory === 'Email')) {
+        score += intel.tool_name === 'list_emails' ? 110 : 45;
+      }
+      if (isEmailQuery && wantsCreate && intel.tool_name === 'send_email') {
+        score += 115;
+      }
+      if (isEmailQuery && normalizedQuery.includes('anex') && intel.tool_name === 'send_email') {
+        score += 140;
+      }
+      if (isEmailQuery && intel.category === 'Arquivos') {
+        score -= 35;
+      }
+      if (normalizedQuery.includes('responder') && intel.tool_name === 'reply_to_email') {
+        score += 120;
+      }
+      if (isProjectQuery && wantsCreate && intel.server_id === 'trello') {
+        score += intel.action_type === 'create' ? 110 : 40;
+      }
+      if (isProjectQuery && wantsSearch && intel.server_id === 'trello') {
+        score += intel.action_type === 'read' ? 100 : 35;
+      }
+      if (isFileQuery && intel.category === 'Arquivos') {
+        score += wantsSearch ? 110 : 80;
+      }
+      if (isKnowledgeQuery && intel.server_id === 'notion') {
+        score += wantsCreate ? (intel.action_type === 'create' ? 115 : 70) : 100;
+      }
+
+      if (normalizedContext) {
+        const normalizedCategory = this.normalizeText(intel.category);
+        const normalizedSubcategory = this.normalizeText(intel.subcategory);
+        if (normalizedCategory.includes(normalizedContext)) score += 25;
+        if (normalizedSubcategory.includes(normalizedContext)) score += 15;
+        if (normalizedContext === 'trabalho' && ['Comunicação', 'Produtividade', 'Conhecimento', 'Arquivos'].includes(intel.category)) {
+          score += 20;
+        }
       }
 
       if (score > 0) {
-        results.push({...intel, performance_score: score}); // Reutiliza campo para score
+        results.push({ ...intel, performance_score: score });
       }
     }
 
-    // Ordena por score descendente, depois por confiabilidade
     return results.sort((a, b) => {
       if (a.performance_score !== b.performance_score) {
         return b.performance_score - a.performance_score;
@@ -535,57 +782,67 @@ export class ToolIntelligenceSystem {
     confidence: number;
     suggestions: ToolIntelligence[];
   } {
-    const lowerQuery = query.toLowerCase();
+    const normalizedQuery = this.normalizeText(query);
+    const queryTokens = this.tokenize(query);
     
-    // Padrões de ação
-    const actionPatterns = {
-      'enviar': /enviar|mandar|disparar|transmitir/,
-      'buscar': /buscar|procurar|encontrar|localizar|achar/,
-      'listar': /listar|mostrar|exibir|ver|visualizar/,
-      'criar': /criar|fazer|gerar|produzir|adicionar/,
-      'tocar': /tocar|reproduzir|play|colocar/,
-      'deletar': /deletar|apagar|remover|excluir/
-    };
+    const actionPatterns: Array<{ action: string; patterns: string[] }> = [
+      { action: 'enviar', patterns: ['enviar', 'mandar', 'disparar', 'transmitir'] },
+      { action: 'buscar', patterns: ['buscar', 'procurar', 'encontrar', 'localizar', 'achar', 'pesquisar'] },
+      { action: 'listar', patterns: ['listar', 'mostrar', 'exibir', 'ver', 'visualizar'] },
+      { action: 'tocar', patterns: ['tocar'] },
+      { action: 'reproduzir', patterns: ['reproduzir'] },
+      { action: 'colocar', patterns: ['colocar'] },
+      { action: 'criar', patterns: ['criar', 'fazer', 'gerar', 'produzir', 'adicionar', 'documentar', 'registrar'] },
+      { action: 'deletar', patterns: ['deletar', 'apagar', 'remover', 'excluir'] }
+    ];
 
-    // Padrões de alvo
-    const targetPatterns = {
-      'email': /email|mensagem|correio|e-mail/,
-      'música': /música|musica|som|track|faixa|spotify/,
-      'arquivo': /arquivo|documento|file|pdf|doc/,
-      'projeto': /projeto|trello|card|tarefa|task/,
-      'whatsapp': /whatsapp|wpp|zap/,
-      'imagem': /imagem|foto|desenho|arte|picture/
-    };
+    const targetPatterns: Array<{ target: string; patterns: string[] }> = [
+      { target: 'email', patterns: ['email', 'emails', 'mensagem', 'mensagens', 'correio', 'e-mail'] },
+      { target: 'música', patterns: ['música', 'musica', 'som', 'track', 'faixa', 'spotify', 'playlist'] },
+      { target: 'arquivo', patterns: ['arquivo', 'arquivos', 'documento', 'documentos', 'file', 'files', 'pdf', 'doc', 'sharepoint', 'onedrive'] },
+      { target: 'projeto', patterns: ['projeto', 'trello', 'card', 'tarefa', 'tarefas', 'task', 'board'] },
+      { target: 'whatsapp', patterns: ['whatsapp', 'wpp', 'zap'] },
+      { target: 'notion', patterns: ['notion', 'pagina', 'paginas', 'documentacao', 'notas', 'conhecimento'] },
+      { target: 'imagem', patterns: ['imagem', 'foto', 'desenho', 'arte', 'picture'] }
+    ];
 
     let detectedAction = 'unknown';
     let detectedTarget = 'unknown';
     let confidence = 0;
 
-    // Detecta ação
-    for (const [action, pattern] of Object.entries(actionPatterns)) {
-      if (pattern.test(lowerQuery)) {
-        detectedAction = action;
-        confidence += 0.5;
+    for (const entry of actionPatterns) {
+      const matchedPattern = entry.patterns.find(pattern => 
+        queryTokens.includes(this.normalizeText(pattern)) || normalizedQuery.includes(this.normalizeText(pattern))
+      );
+
+      if (matchedPattern) {
+        detectedAction = this.normalizeText(matchedPattern);
+        confidence += 0.45;
         break;
       }
     }
 
-    // Detecta alvo
-    for (const [target, pattern] of Object.entries(targetPatterns)) {
-      if (pattern.test(lowerQuery)) {
-        detectedTarget = target;
-        confidence += 0.5;
+    for (const entry of targetPatterns) {
+      const matchedPattern = entry.patterns.find(pattern => 
+        queryTokens.includes(this.normalizeText(pattern)) || normalizedQuery.includes(this.normalizeText(pattern))
+      );
+
+      if (matchedPattern) {
+        detectedTarget = entry.target;
+        confidence += 0.45;
         break;
       }
     }
 
-    // Busca sugestões baseadas na análise
-    const suggestions = this.smartSearch(`${detectedAction} ${detectedTarget}`).slice(0, 3);
+    const suggestions = this.smartSearch(query).slice(0, 3);
+    if (suggestions.length > 0) {
+      confidence += 0.1;
+    }
 
     return {
       action: detectedAction,
       target: detectedTarget,
-      confidence,
+      confidence: Math.min(confidence, 0.99),
       suggestions
     };
   }

@@ -1,6 +1,7 @@
 // HubClient - Integration layer with MCP Hub
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
+import { existsSync } from 'fs';
 import { config } from 'dotenv';
 import type { ServerInfo, ToolInfo } from '../types/api.js';
 
@@ -27,9 +28,20 @@ export class HubClient {
   private requestId = 0;
   private pendingRequests: Map<number, { resolve: (value: any) => void; reject: (error: any) => void }> = new Map();
   private buffer = '';
+  private readonly hubRoot: string;
+  private readonly hubEntryPath: string;
+  private readonly hubEnvPath: string;
 
   constructor() {
-    this.hubConfigPath = '/Users/fernandotaricano/mcp/mcp-hub/hub-config.json';
+    const cwd = process.cwd();
+    const defaultHubRoot = cwd.endsWith(path.join('testing-interface', 'backend'))
+      ? path.resolve(cwd, '../..')
+      : cwd;
+
+    this.hubRoot = process.env.MCP_HUB_ROOT || defaultHubRoot;
+    this.hubConfigPath = process.env.HUB_CONFIG || path.join(this.hubRoot, 'hub-config.json');
+    this.hubEntryPath = process.env.MCP_HUB_ENTRY || path.join(this.hubRoot, 'dist/index.js');
+    this.hubEnvPath = process.env.MCP_HUB_ENV_PATH || path.join(this.hubRoot, '.env');
   }
 
   /**
@@ -42,13 +54,14 @@ export class HubClient {
 
     console.log('🚀 Starting MCP Hub process...');
 
-    // Load Hub's .env file to get all credentials
-    const hubEnvPath = '/Users/fernandotaricano/mcp/mcp-hub/.env';
-    const hubEnv = config({ path: hubEnvPath });
+    // Load Hub's .env file to get credentials if present
+    const hubEnv = existsSync(this.hubEnvPath)
+      ? config({ path: this.hubEnvPath })
+      : { parsed: {} };
 
     console.log(`📋 Loaded ${Object.keys(hubEnv.parsed || {}).length} environment variables from Hub .env`);
 
-    this.hubProcess = spawn('node', ['/Users/fernandotaricano/mcp/mcp-hub/dist/index.js'], {
+    this.hubProcess = spawn('node', [this.hubEntryPath], {
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
         ...process.env,
