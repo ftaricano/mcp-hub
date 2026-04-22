@@ -429,10 +429,11 @@ export class ServerRegistry {
           );
         }
         
-        // Enhanced music/spotify searches
+        // Enhanced music searches
         if (lowerQuery === 'music' || lowerQuery === 'música' || lowerQuery === 'musica') {
           return (
-            tool.server_id === 'spotify' ||
+            tool.server_id.includes('music') ||
+            tool.server_id.includes('audio') ||
             tool.tool_name.includes('play') ||
             tool.tool_name.includes('music') ||
             tool.description.toLowerCase().includes('music') ||
@@ -443,10 +444,12 @@ export class ServerRegistry {
           );
         }
         
-        // Enhanced project management searches
+        // Enhanced project-management searches
         if (lowerQuery === 'project' || lowerQuery === 'projeto') {
           return (
-            tool.server_id === 'trello' ||
+            tool.server_id.includes('project') ||
+            tool.server_id.includes('task') ||
+            tool.server_id.includes('issue') ||
             tool.tool_name.includes('card') ||
             tool.tool_name.includes('board') ||
             tool.tool_name.includes('list') ||
