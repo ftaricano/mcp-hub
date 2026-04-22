@@ -334,8 +334,38 @@ describe('Hub Server Communication Integration', () => {
       expect(emailResult).toBeDefined();
     });
 
-    it('deve implementar retry automático para falhas temporárias', async () => {
+    it('não faz retry automático para tool calls mutáveis por padrão', async () => {
       let callCount = 0;
+      
+      vi.spyOn(serverRegistry, 'getConnection').mockResolvedValue({
+        client: {
+          callTool: async () => {
+            callCount++;
+            throw new Error('Temporary network error');
+          }
+        } as any
+      });
+      
+      await expect(serverRegistry.callTool('trello', 'create_card', { title: 'urgent' })).rejects.toThrow('Temporary network error');
+      expect(callCount).toBe(1);
+    });
+
+    it('permite retry explícito apenas para ferramentas allowlisted como idempotentes', async () => {
+      let callCount = 0;
+      (serverRegistry as any).servers.set('trello', {
+        id: 'trello',
+        name: 'Trello',
+        command: 'node',
+        args: ['trello.js'],
+        protocol: 'stdio',
+        enabled: true,
+        retries: 2,
+        toolCallRetries: {
+          enabled: true,
+          maxAttempts: 3,
+          retryableTools: ['get_boards'],
+        },
+      });
       
       vi.spyOn(serverRegistry, 'getConnection').mockResolvedValue({
         client: {

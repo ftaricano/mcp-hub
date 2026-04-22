@@ -27,6 +27,9 @@ function resolveEnvPath(serverId: string): string {
   for (const envVar of candidateEnvVars) {
     const envPath = process.env[envVar];
     if (envPath) {
+      if (envVar !== genericEnvVar) {
+        logger.warn(`Using legacy environment alias ${envVar} for ${serverId}. Prefer ${genericEnvVar}.`);
+      }
       logger.debug(`Using ${envVar} for server environment`, { serverId, envVar, envPath });
       return envPath;
     }
@@ -63,20 +66,12 @@ export function loadEnvFromPath(envPath: string): Record<string, string> {
  * @param serverId The server ID to load environment for
  * @returns Object with environment variables
  */
-export function loadServerEnv(serverId: string): Record<string, string> {
-  const envPath = resolveEnvPath(serverId);
+export function loadServerEnv(serverId: string, explicitEnvPath?: string): Record<string, string> {
+  const envPath = explicitEnvPath || resolveEnvPath(serverId);
   if (!envPath) {
-    logger.warn(`No environment path configured for server: ${serverId}. Set MCP_${normalizeServerIdForEnv(serverId)}_ENV_PATH to enable per-server .env loading.`);
+    logger.debug(`No environment path configured for server: ${serverId}. Set MCP_${normalizeServerIdForEnv(serverId)}_ENV_PATH or envFile to enable per-server .env loading.`);
     return {};
   }
 
-  const env = loadEnvFromPath(envPath);
-  
-  // Special handling for outlook-faturamento
-  if (serverId === 'outlook-faturamento' && env.TARGET_USER_EMAIL) {
-    // Override TARGET_USER_EMAIL for faturamento account
-    env.TARGET_USER_EMAIL = 'faturamento@cpzseg.com.br';
-  }
-  
-  return env;
+  return loadEnvFromPath(envPath);
 }

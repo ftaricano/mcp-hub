@@ -26,6 +26,7 @@ import {
   ServerNotFoundError,
   ToolNotFoundError,
 } from './types/index.js';
+import { summarizeToolArguments } from './utils/redaction.js';
 
 const config = loadConfig();
 const logger = createLogger(config.logging.level, config.logging.format);
@@ -309,8 +310,14 @@ class MCPHub {
 
   private async handleCallTool(args: unknown): Promise<CallToolResult> {
     const params = CallToolParamsSchema.parse(args);
+    const argumentSummary = summarizeToolArguments(params.arguments);
     
-    logger.info('Calling tool:', params);
+    logger.info('Calling tool:', {
+      serverId: params.server_id,
+      toolName: params.tool_name,
+      argumentKeys: argumentSummary.argumentKeys,
+      redactedKeys: argumentSummary.sensitiveKeys,
+    });
     const startTime = Date.now();
     
     // Log tool call to debug logger
@@ -372,7 +379,12 @@ class MCPHub {
       // Record failure in intelligent cache
       intelligentCache.recordToolUsage(toolKey, responseTime, false);
       
-      logger.error('Tool call failed:', { serverId: params.server_id, toolName: params.tool_name, error, responseTime: `${responseTime}ms` });
+      logger.error('Tool call failed:', {
+        serverId: params.server_id,
+        toolName: params.tool_name,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        responseTime: `${responseTime}ms`
+      });
       
       if (error instanceof Error) {
         throw error;
