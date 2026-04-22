@@ -103,6 +103,28 @@ describe('ServerRegistry hardening', () => {
     expect(callToolMock).toHaveBeenCalledTimes(1);
   });
 
+  it('does not retry tools that are not explicitly allowlisted even when retries are enabled', async () => {
+    const registry = new ServerRegistry();
+    const callToolMock = vi.fn().mockRejectedValue(new Error('mutating-call-failed'));
+
+    (registry as any).servers.set('docs-server', createServerConfig({
+      toolCallRetries: {
+        enabled: true,
+        maxAttempts: 4,
+        retryableTools: ['search_docs'],
+      },
+    }));
+
+    vi.spyOn(registry, 'getConnection').mockResolvedValue({
+      client: {
+        callTool: callToolMock,
+      },
+    } as any);
+
+    await expect(registry.callTool('docs-server', 'create_doc', { title: 'sprint notes' })).rejects.toThrow('mutating-call-failed');
+    expect(callToolMock).toHaveBeenCalledTimes(1);
+  });
+
   it('retries only explicitly allowlisted idempotent tools', async () => {
     const registry = new ServerRegistry();
     const callToolMock = vi.fn()
