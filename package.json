@@ -1,7 +1,7 @@
 {
   "name": "@mcp/hub",
   "version": "0.1.0",
-  "description": "MCP Hub - Proxy server to consolidate multiple MCP servers into 2 tools",
+  "description": "MCP gateway that consolidates multiple servers behind a smaller, AI-friendly tool surface.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

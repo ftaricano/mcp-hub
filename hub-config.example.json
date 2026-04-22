@@ -1,0 +1,46 @@
+{
+  "servers": [
+    {
+      "id": "notion",
+      "name": "Notion",
+      "command": "node",
+      "args": ["/absolute/path/to/mcp-notion/dist/index.js"],
+      "env": {
+        "NOTION_TOKEN": "your_notion_integration_token"
+      },
+      "protocol": "stdio",
+      "enabled": true,
+      "timeout": 30000,
+      "retries": 2,
+      "tags": ["knowledge", "docs"]
+    },
+    {
+      "id": "gmail-calendar",
+      "name": "Gmail and Google Calendar",
+      "command": "node",
+      "args": ["/absolute/path/to/mcp-gmail-calendar/dist/index.js"],
+      "env": {
+        "GOOGLE_CREDENTIALS_PATH": "/absolute/path/to/credentials.json",
+        "OAUTH_CALLBACK_PORT": "3000",
+        "TOKENS_PATH": "/absolute/path/to/mcp-gmail-calendar/tokens"
+      },
+      "protocol": "stdio",
+      "enabled": true,
+      "timeout": 30000,
+      "retries": 2,
+      "tags": ["email", "calendar", "google"]
+    }
+  ],
+  "cache": {
+    "enabled": true,
+    "ttl": 300000
+  },
+  "security": {
+    "rate_limit": 100,
+    "validate_schemas": true
+  },
+  "logging": {
+    "level": "info",
+    "format": "json"
+  }
+}
