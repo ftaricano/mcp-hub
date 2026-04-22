@@ -2,32 +2,31 @@
 
 Status: experimental
 
-MCP gateway that consolidates multiple servers behind a shared discovery, routing, and recommendation layer.
+MCP Hub is a generic aggregation layer for Model Context Protocol servers. It does not ship with built-in downstream MCPs. Instead, you register any MCP servers you already run and expose them through one shared hub for discovery, routing, and recommendations.
 
-## Why this exists
+## What this repo is
 
-Some MCP setups become hard to operate once you have several servers, overlapping tools, and no shared discovery layer. This project sits in front of multiple MCP servers and adds a hub-native workflow for discovery, routing, and recommendations.
+Use MCP Hub when you want one MCP entry point in front of many independent MCP servers.
 
-In practice, the hub is useful when you want to:
-- browse a combined catalog of tools across servers,
-- route calls to multiple MCP servers from one entry point,
-- add lightweight discovery and recommendation workflows on top of registered servers.
+The hub can:
+- aggregate tool metadata across registered MCP servers,
+- route tool calls to the correct downstream server,
+- search the combined tool catalog with natural-language queries,
+- return recommendation-style results based on the available tool metadata.
 
-## What it does
+The repository also includes caching, retries, typed configuration, and unit/integration/e2e/performance test coverage.
 
-The hub registers downstream MCP servers, reads their tools, and adds four hub-native commands:
-- `list-all-tools` to browse the combined tool catalog,
-- `call-tool` to execute a tool on a selected server,
-- `smart-search` to search for tools from a natural-language query,
-- `get-recommendations` to return recommendation-oriented results.
+## What this repo is not
 
-The codebase also includes caching, retry handling, typed configuration, and multiple Vitest suites.
+- It is not a bundle of preinstalled MCP integrations.
+- It is not coupled to any single vendor, app, or workflow.
+- Example server IDs in this repo are placeholders or test fixtures, not embedded product dependencies.
 
 ## Quickstart
 
 Prerequisites:
 - Node.js 18+
-- One or more MCP servers you can launch locally
+- One or more MCP servers you can run locally or reach over HTTP/SSE
 
 1. Install dependencies
 
@@ -43,7 +42,7 @@ npm install
 cp hub-config.example.json hub-config.json
 ```
 
-Edit `hub-config.json` so each entry points to a real MCP server on your machine.
+Edit `hub-config.json` so each entry points to real MCP servers in your environment.
 
 Minimal example:
 
@@ -51,18 +50,18 @@ Minimal example:
 {
   "servers": [
     {
-      "id": "notion",
-      "name": "Notion",
+      "id": "docs-server",
+      "name": "Documentation MCP Server",
       "command": "node",
-      "args": ["/absolute/path/to/mcp-notion/dist/index.js"],
+      "args": ["/absolute/path/to/your-docs-mcp/dist/index.js"],
       "env": {
-        "NOTION_TOKEN": "your_notion_integration_token"
+        "DOCS_API_KEY": "replace_with_real_secret_if_needed"
       },
       "protocol": "stdio",
       "enabled": true,
       "timeout": 30000,
       "retries": 2,
-      "tags": ["knowledge", "docs"]
+      "tags": ["docs", "knowledge"]
     }
   ],
   "cache": {
@@ -86,7 +85,7 @@ Minimal example:
 npm run build
 ```
 
-4. Add it to your MCP client
+4. Register the hub in your MCP client
 
 ```json
 {
@@ -102,37 +101,27 @@ npm run build
 }
 ```
 
-## Typical use cases
+## Hub-native interface
 
-- keep a client configuration centered on one hub instead of many separate servers,
-- expose a smaller interface when underlying servers publish a large tool surface,
-- search for the right server/tool combination before making a call,
-- unify personal automation servers behind one MCP entry point.
-
-## Hub interface
-
-### `list-all-tools`
-Returns the aggregated tool catalog across registered servers, with optional filtering.
-
-### `call-tool`
-Calls a specific tool on a specific downstream server.
-
-### `smart-search`
-Runs a natural-language query against the available tool metadata and returns ranked matches.
-
-### `get-recommendations`
-Returns recommendation-style results based on category and usage-oriented parameters.
+MCP Hub adds four hub-native commands on top of the downstream servers you register:
+- `list-all-tools` to browse the aggregated catalog,
+- `call-tool` to execute a specific tool on a specific downstream server,
+- `smart-search` to rank tools for a natural-language query,
+- `get-recommendations` to return recommendation-oriented results.
 
 ## Configuration notes
 
-- `HUB_CONFIG` can point to a JSON file with the registered servers.
+- `HUB_CONFIG` can point to any JSON file matching the hub config shape.
 - If `HUB_CONFIG` is not set, the hub also attempts to discover `hub-config.json` in common local paths.
-- The current TypeScript types expect `servers` as an array of server definitions.
-- Downstream servers can use `stdio` or `http` entries in the config type, although the main local examples use `stdio`.
+- Registered servers can use `stdio` or `http` entries.
+- The hub only exposes what you configure; no downstream MCP is bundled automatically.
 
-## Project status
+## Typical use cases
 
-This repository already includes unit, integration, e2e, and performance test targets, but the package version is still `0.1.0` and the project is best described as experimental rather than production-ready.
+- keep client configuration centered on one hub instead of many separate server entries,
+- expose a smaller operational surface when downstream servers publish many tools,
+- search for the right server/tool combination before making a call,
+- compose internal, local, or third-party MCP servers behind one MCP endpoint.
 
 ## Development
 

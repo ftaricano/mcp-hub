@@ -1,7 +1,7 @@
 {
   "name": "@mcp/hub",
   "version": "0.1.0",
-  "description": "MCP gateway that consolidates multiple servers behind a smaller, AI-friendly tool surface.",
+  "description": "Generic MCP hub that aggregates, searches, and routes tools from any registered MCP server.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -53,15 +53,13 @@
   "keywords": [
     "mcp",
     "model-context-protocol",
-    "proxy",
     "hub",
-    "cursor",
-    "claude-code",
-    "secret-manager",
-    "encryption",
-    "credentials",
-    "oauth2",
-    "security"
+    "gateway",
+    "proxy",
+    "tool-discovery",
+    "tool-routing",
+    "aggregation",
+    "server-registry"
   ],
   "author": "Fernando Taricano",
   "license": "MIT"

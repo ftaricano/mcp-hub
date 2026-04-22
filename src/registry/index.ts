@@ -316,20 +316,59 @@ export class ServerRegistry {
   }
 
   async callTool(serverId: string, toolName: string, args: Record<string, unknown>): Promise<any> {
-    const connection = await this.getConnection(serverId);
-    
-    try {
-      const response = await connection.client.callTool({
-        name: toolName,
-        arguments: args
-      });
+    this.validateToolArguments(serverId, toolName, args);
 
-      logger.info('Tool call successful:', { serverId, toolName });
-      return response;
-    } catch (error) {
-      logger.error('Tool call failed:', { serverId, toolName, error });
-      throw new ConnectionError(serverId, `Tool call failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    const connection = await this.getConnection(serverId);
+    const serverConfig = this.servers.get(serverId);
+    const maxAttempts = Math.max(1, (serverConfig?.retries ?? 2) + 1);
+    let lastError: unknown;
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const response = await connection.client.callTool({
+          name: toolName,
+          arguments: args
+        });
+
+        logger.info('Tool call successful:', { serverId, toolName, attempt });
+        return response;
+      } catch (error) {
+        lastError = error;
+        logger.error('Tool call failed:', { serverId, toolName, attempt, error });
+
+        if (attempt < maxAttempts) {
+          const delay = Math.min(100 * Math.pow(2, attempt - 1), 1000);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+      }
     }
+
+    throw new ConnectionError(serverId, `Tool call failed: ${lastError instanceof Error ? lastError.message : 'Unknown error'}`);
+  }
+
+  private validateToolArguments(serverId: string, toolName: string, args: Record<string, unknown>): void {
+    const metadata = this.findToolMetadata(serverId, toolName);
+    if (!metadata) {
+      return;
+    }
+
+    const schema = metadata.schema as { required?: string[] } | undefined;
+    const requiredFields = Array.isArray(schema?.required) ? schema.required : [];
+    const missingFields = requiredFields.filter(field => args[field] === undefined || args[field] === null || args[field] === '');
+
+    if (missingFields.length > 0) {
+      throw new Error(`Missing required arguments for ${serverId}/${toolName}: ${missingFields.join(', ')}`);
+    }
+  }
+
+  private findToolMetadata(serverId: string, toolName: string): ToolMetadata | undefined {
+    const directMatch = this.getServerTools(serverId).find(tool => tool.tool_name === toolName);
+    if (directMatch) {
+      return directMatch;
+    }
+
+    return this.getAllTools().find(tool => tool.server_id === serverId && tool.tool_name === toolName);
   }
 
   getAllTools(): ToolMetadata[] {

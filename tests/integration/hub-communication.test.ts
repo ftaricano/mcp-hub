@@ -41,11 +41,14 @@ describe('Hub Server Communication Integration', () => {
     serverRegistry = new ServerRegistry();
     hubCache = new HubCache(300, true); // 5 minute TTL, enabled
     
-    // Mock registry methods to use our mock server manager
-    vi.spyOn(serverRegistry, 'callTool').mockImplementation(
-      async (serverId: string, toolName: string, args: any) => {
-        return mockServerManager.simulateServerCall(serverId, toolName, args);
-      }
+    // Mock registry connections to use our mock server manager while preserving callTool logic
+    vi.spyOn(serverRegistry, 'getConnection').mockImplementation(
+      async (serverId: string) => ({
+        client: {
+          callTool: async ({ name, arguments: args }: { name: string; arguments?: Record<string, unknown> }) => 
+            mockServerManager.simulateServerCall(serverId, name, args ?? {})
+        } as any
+      })
     );
     
     vi.spyOn(serverRegistry, 'getAllTools').mockReturnValue([
@@ -333,31 +336,21 @@ describe('Hub Server Communication Integration', () => {
 
     it('deve implementar retry automático para falhas temporárias', async () => {
       let callCount = 0;
-
-      const flakyCall = async () => {
-        callCount++;
-        if (callCount <= 2) {
-          throw new Error('Temporary network error');
-        }
-
-        return mockServerManager.simulateServerCall('trello', 'get_boards', {});
-      };
-
-      const executeWithRetry = async <T>(operation: () => Promise<T>, retries: number): Promise<T> => {
-        let lastError: Error | undefined;
-
-        for (let attempt = 1; attempt <= retries; attempt++) {
-          try {
-            return await operation();
-          } catch (error) {
-            lastError = error instanceof Error ? error : new Error('Unknown error');
-          }
-        }
-
-        throw lastError ?? new Error('Retry attempts exhausted');
-      };
       
-      const result = await executeWithRetry(flakyCall, 3);
+      vi.spyOn(serverRegistry, 'getConnection').mockResolvedValue({
+        client: {
+          callTool: async () => {
+            callCount++;
+            if (callCount <= 2) {
+              throw new Error('Temporary network error');
+            }
+
+            return mockServerManager.simulateServerCall('trello', 'get_boards', {});
+          }
+        } as any
+      });
+      
+      const result = await serverRegistry.callTool('trello', 'get_boards', {});
       expect(result).toBeDefined();
       expect(callCount).toBe(3);
     });
@@ -393,7 +386,11 @@ describe('Hub Server Communication Integration', () => {
         const toolName = serverId === 'trello' ? 'get_boards' :
                         serverId === 'outlook-fernando' ? 'list_emails' : 'search_tracks';
         
-        operations.push(serverRegistry.callTool(serverId, toolName, { test: i }));
+        operations.push(serverRegistry.callTool(
+          serverId,
+          toolName,
+          serverId === 'spotify' ? { query: `focus-${i}` } : { test: i }
+        ));
       }
       
       const startTime = performance.now();
@@ -442,14 +439,12 @@ describe('Hub Server Communication Integration', () => {
 
   describe('Data Consistency and Validation', () => {
     it('deve validar parâmetros antes de chamar servidores', async () => {
-      const trelloTool = MOCK_TOOLS_BY_SERVER.trello.find(tool => tool.name === 'add_card_to_list');
-      const requiredFields = trelloTool?.inputSchema.required ?? [];
-      const args = {};
-
-      const missingRequiredFields = requiredFields.filter(field => !(field in args));
-
-      expect(missingRequiredFields).toEqual(['listId', 'name']);
-      expect(missingRequiredFields.length).toBeGreaterThan(0);
+      // Test missing required parameters
+      await expect(
+        serverRegistry.callTool('trello', 'add_card_to_list', {
+          // Missing required listId and name
+        })
+      ).rejects.toThrow(); // Should throw validation error before reaching server
     });
 
     it('deve manter integridade de dados em workflows cross-server', async () => {
