@@ -24,13 +24,15 @@ export class IntelligentCache {
   private usageStats: Map<string, ToolUsageStats> = new Map();
   private maxSize: number = 1000;
   private defaultTtl: number = 300000; // 5 minutos
+  private cleanupInterval?: NodeJS.Timeout;
 
   constructor(maxSize?: number, defaultTtl?: number) {
     if (maxSize) this.maxSize = maxSize;
     if (defaultTtl) this.defaultTtl = defaultTtl;
     
     // Limpa cache automaticamente
-    setInterval(() => this.cleanup(), 60000); // A cada minuto
+    this.cleanupInterval = setInterval(() => this.cleanup(), 60000);
+    this.cleanupInterval.unref?.();
   }
 
   // Cache inteligente com scoring
@@ -170,7 +172,7 @@ export class IntelligentCache {
   }
 
   // Limpeza automática
-  private cleanup(): void {
+  public cleanup(): void {
     const now = Date.now();
     const keysToDelete: string[] = [];
 
@@ -199,6 +201,7 @@ export class IntelligentCache {
   // Estatísticas do cache
   getStats(): {
     cacheSize: number;
+    totalKeys: number;
     hitRate: number;
     avgResponseTime: number;
     mostPopular: string[];
@@ -216,6 +219,7 @@ export class IntelligentCache {
 
     return {
       cacheSize: this.cache.size,
+      totalKeys: this.cache.size,
       hitRate: totalAccess > 0 ? hits / totalAccess : 0,
       avgResponseTime: Math.round(avgResponseTime),
       mostPopular

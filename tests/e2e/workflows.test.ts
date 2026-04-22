@@ -38,6 +38,11 @@ class MockMCPHub {
       result: { content: [{ type: 'text', text: JSON.stringify({ success: true, type: 'file' }) }] },
       latency: 160
     });
+
+    this.serverManager.mockServer('whatsapp', {
+      result: { content: [{ type: 'text', text: JSON.stringify({ success: true, type: 'message' }) }] },
+      latency: 170
+    });
   }
 
   async smartSearch(query: string, context?: string) {
@@ -261,6 +266,7 @@ describe('End-to-End Workflow Tests', () => {
       expect(musicSearchResult.results[0].server_id).toBe('spotify');
 
       const mockSpotifyData = {
+        success: true,
         playing: true,
         track: {
           id: 'focus-track-123',

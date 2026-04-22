@@ -119,14 +119,15 @@ export class HubCache {
 
   // Tool call result caching
   getToolResult(serverId: string, toolName: string, argsHash: string): any {
-    if (!this.enabled) return undefined;
+    if (!this.enabled) return null;
 
     const key = `result:${serverId}:${toolName}:${argsHash}`;
     const result = this.cache.get(key);
     if (result !== undefined) {
       logger.debug('Tool result cache hit:', { serverId, toolName });
+      return result;
     }
-    return result;
+    return null;
   }
 
   setToolResult(
