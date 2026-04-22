@@ -2,7 +2,7 @@
 
 Status: experimental
 
-MCP gateway that consolidates multiple servers behind a smaller, AI-friendly tool surface.
+MCP gateway that consolidates multiple servers behind a shared discovery, routing, and recommendation layer.
 
 ## Why this exists
 
