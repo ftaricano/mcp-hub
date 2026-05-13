@@ -116,6 +116,17 @@ MCP Hub adds four hub-native commands on top of the downstream servers you regis
 - `smart-search` to rank tools for a natural-language query,
 - `get-recommendations` to return recommendation-oriented results.
 
+## MCPorter pilot
+
+This repo also carries a local MCPorter pilot for the Ferd tools workspace. MCPorter is used beside MCP Hub for CLI-friendly inventory, smoke checks, and generated TypeScript surfaces; it does not replace the existing hand-written domain CLIs.
+
+```bash
+npm run mcporter:list
+npm run mcporter:smoke
+```
+
+See `docs/mcporter.md` for the policy, active pilot servers, and backlog of local MCPs to promote after auth/build checks.
+
 ## Configuration notes
 
 - `HUB_CONFIG` can point to any JSON file matching the hub config shape.
