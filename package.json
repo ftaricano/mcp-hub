@@ -23,7 +23,9 @@
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:coverage": "vitest run --coverage",
     "test:performance": "vitest run --config vitest.performance.config.ts",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "mcporter:list": "npx --yes mcporter list --config config/mcporter.json --json",
+    "mcporter:smoke": "node scripts/mcporter-smoke.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

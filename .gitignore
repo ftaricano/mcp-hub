@@ -33,3 +33,4 @@ coverage/
 # Hub specific
 hub-config.json
 server-status.json
+generated/mcporter/
