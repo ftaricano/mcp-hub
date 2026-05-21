@@ -25,9 +25,9 @@ export function createExecuteRoutes(hubClient: HubClient): Router {
           success: false,
           error: {
             code: 'INVALID_REQUEST',
-            message: 'serverId and toolName are required'
+            message: 'serverId and toolName are required',
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
         return res.status(400).json(response);
       }
@@ -43,13 +43,13 @@ export function createExecuteRoutes(hubClient: HubClient): Router {
         result,
         executionTime,
         timestamp: new Date().toISOString(),
-        status: 'success'
+        status: 'success',
       };
 
       const response: ApiResponse<ExecutionResult> = {
         success: true,
         data: executionResult,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       res.json(response);
@@ -67,8 +67,8 @@ export function createExecuteRoutes(hubClient: HubClient): Router {
         error: {
           code: 'EXECUTION_ERROR',
           message: error.message || 'Tool execution failed',
-          details: error
-        }
+          details: error,
+        },
       };
 
       const response: ApiResponse<ExecutionResult> = {
@@ -76,9 +76,9 @@ export function createExecuteRoutes(hubClient: HubClient): Router {
         data: executionResult,
         error: {
           code: 'EXECUTION_ERROR',
-          message: error.message || 'Tool execution failed'
+          message: error.message || 'Tool execution failed',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       res.status(500).json(response);

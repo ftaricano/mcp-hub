@@ -25,7 +25,8 @@ function createSimpleLogger(name: string, parentContext: Record<string, any> = {
     info: (message: string, context?: any) => log('info', message, context),
     warn: (message: string, context?: any) => log('warn', message, context),
     error: (message: string, context?: any) => log('error', message, context),
-    child: (context: Record<string, any>) => createSimpleLogger(name, { ...parentContext, ...context }),
+    child: (context: Record<string, any>) =>
+      createSimpleLogger(name, { ...parentContext, ...context }),
   };
 }
 
@@ -40,7 +41,7 @@ export const processLogger = logger.child({ component: 'process-manager' });
 
 /**
  * Migration helper to easily replace console.log
- * Usage: 
+ * Usage:
  *   Before: console.log('[Hub] Starting server...')
  *   After:  log.info('Starting server...')
  */
@@ -49,17 +50,17 @@ export const log = {
     const context = args.length > 0 ? { data: args } : undefined;
     logger.debug(message, context);
   },
-  
+
   info: (message: string, ...args: any[]) => {
     const context = args.length > 0 ? { data: args } : undefined;
     logger.info(message, context);
   },
-  
+
   warn: (message: string, ...args: any[]) => {
     const context = args.length > 0 ? { data: args } : undefined;
     logger.warn(message, context);
   },
-  
+
   error: (message: string, error?: any, ...args: any[]) => {
     const context = { ...args, error };
     logger.error(message, context);
@@ -70,7 +71,7 @@ export const log = {
     if (process.env.NODE_ENV !== 'production') {
       logger.info(message, { data: args });
     }
-  }
+  },
 };
 
 // Compatibility wrapper so other modules can call createLogger in two ways:

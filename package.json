@@ -1,13 +1,21 @@
 {
-  "name": "@mcp/hub",
+  "name": "@ftaricano/mcp-hub",
   "version": "0.1.0",
-  "description": "Generic MCP hub that aggregates, searches, and routes tools from any registered MCP server.",
+  "description": "TypeScript MCP gateway that aggregates, searches, and routes tools from multiple Model Context Protocol servers.",
   "type": "module",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
-    "mcp-hub": "./dist/index.js",
-    "mcp-secret": "./bin/mcp-secret"
+    "mcp-hub": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md",
+    "hub-config.example.json",
+    "LMStudio-MCP-Config.md"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
@@ -16,6 +24,7 @@
     "clean": "rm -rf dist",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write src",
+    "format:check": "prettier --check --ignore-unknown src tests testing-interface README.md SECURITY.md LMStudio-MCP-Config.md hub-config.example.json .env.example",
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:unit": "vitest run --config vitest.unit.config.ts",
@@ -59,8 +68,23 @@
     "tool-discovery",
     "tool-routing",
     "aggregation",
-    "server-registry"
+    "server-registry",
+    "ai-tools",
+    "llm-tools",
+    "developer-tools"
   ],
   "author": "Fernando Taricano",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ftaricano/mcp-hub.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ftaricano/mcp-hub/issues"
+  },
+  "homepage": "https://github.com/ftaricano/mcp-hub#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "packageManager": "npm@10"
 }

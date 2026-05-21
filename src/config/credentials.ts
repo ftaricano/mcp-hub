@@ -26,25 +26,25 @@ const ServiceCredentialsSchema = z.object({
   MICROSOFT_GRAPH_CLIENT_ID: CredentialSchema.optional(),
   MICROSOFT_GRAPH_CLIENT_SECRET: CredentialSchema.optional(),
   MICROSOFT_GRAPH_TENANT_ID: CredentialSchema.optional(),
-  
+
   // Trello
   TRELLO_API_KEY: CredentialSchema.optional(),
   TRELLO_TOKEN: CredentialSchema.optional(),
-  
+
   // Spotify
   SPOTIFY_CLIENT_ID: CredentialSchema.optional(),
   SPOTIFY_CLIENT_SECRET: CredentialSchema.optional(),
-  
+
   // YouTube
   YOUTUBE_CLIENT_ID: CredentialSchema.optional(),
   YOUTUBE_CLIENT_SECRET: CredentialSchema.optional(),
-  
+
   // GitHub
   GITHUB_TOKEN: CredentialSchema.optional(),
-  
+
   // Notion
   NOTION_TOKEN: CredentialSchema.optional(),
-  
+
   // WhatsApp
   WHATSAPP_ACCESS_TOKEN: CredentialSchema.optional(),
   WHATSAPP_PHONE_NUMBER_ID: CredentialSchema.optional(),
@@ -82,7 +82,7 @@ export class CredentialsManager {
    */
   private initializeEncryption(): void {
     const keyEnv = process.env.MCP_ENCRYPTION_KEY;
-    
+
     if (keyEnv) {
       this.encryptionKey = Buffer.from(keyEnv, 'hex');
     } else {
@@ -90,8 +90,8 @@ export class CredentialsManager {
       this.encryptionKey = crypto.randomBytes(KEY_LENGTH);
       console.warn(
         '🔑 NEW ENCRYPTION KEY GENERATED - SAVE THIS SECURELY:\n' +
-        `MCP_ENCRYPTION_KEY=${this.encryptionKey.toString('hex')}\n` +
-        'Add this to your environment variables!'
+          `MCP_ENCRYPTION_KEY=${this.encryptionKey.toString('hex')}\n` +
+          'Add this to your environment variables!'
       );
     }
   }
@@ -108,25 +108,25 @@ export class CredentialsManager {
       MICROSOFT_GRAPH_CLIENT_ID: process.env.MICROSOFT_GRAPH_CLIENT_ID,
       MICROSOFT_GRAPH_CLIENT_SECRET: process.env.MICROSOFT_GRAPH_CLIENT_SECRET,
       MICROSOFT_GRAPH_TENANT_ID: process.env.MICROSOFT_GRAPH_TENANT_ID,
-      
-      // Trello  
+
+      // Trello
       TRELLO_API_KEY: process.env.TRELLO_API_KEY,
       TRELLO_TOKEN: process.env.TRELLO_TOKEN,
-      
+
       // Spotify
       SPOTIFY_CLIENT_ID: process.env.SPOTIFY_CLIENT_ID,
       SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET,
-      
+
       // YouTube
       YOUTUBE_CLIENT_ID: process.env.YOUTUBE_CLIENT_ID,
       YOUTUBE_CLIENT_SECRET: process.env.YOUTUBE_CLIENT_SECRET,
-      
+
       // GitHub
       GITHUB_TOKEN: process.env.GITHUB_TOKEN,
-      
+
       // Notion
       NOTION_TOKEN: process.env.NOTION_TOKEN,
-      
+
       // WhatsApp
       WHATSAPP_ACCESS_TOKEN: process.env.WHATSAPP_ACCESS_TOKEN,
       WHATSAPP_PHONE_NUMBER_ID: process.env.WHATSAPP_PHONE_NUMBER_ID,
@@ -158,14 +158,14 @@ export class CredentialsManager {
     try {
       const fileContent = await fs.readFile(filePath, 'utf-8');
       const encryptedData = JSON.parse(fileContent);
-      
+
       if (this.config.encryptionEnabled && this.encryptionKey) {
         const decrypted = this.decryptCredentials(encryptedData);
         this.credentials = ServiceCredentialsSchema.parse(decrypted);
       } else {
         this.credentials = ServiceCredentialsSchema.parse(encryptedData);
       }
-      
+
       console.log(`✅ Loaded credentials from file: ${filePath}`);
     } catch (error) {
       console.warn(`⚠️ Could not load credentials from file: ${error}`);
@@ -181,7 +181,7 @@ export class CredentialsManager {
     await fs.mkdir(dir, { recursive: true });
 
     let dataToSave: any = this.credentials;
-    
+
     if (this.config.encryptionEnabled && this.encryptionKey) {
       dataToSave = this.encryptCredentials(this.credentials);
     }
@@ -223,32 +223,32 @@ export class CredentialsManager {
         this.addToEnv(env, 'TRELLO_API_KEY');
         this.addToEnv(env, 'TRELLO_TOKEN');
         break;
-        
+
       case 'email-advanced':
       case 'onedrive-sharepoint':
         this.addToEnv(env, 'MICROSOFT_GRAPH_CLIENT_ID');
         this.addToEnv(env, 'MICROSOFT_GRAPH_CLIENT_SECRET');
         this.addToEnv(env, 'MICROSOFT_GRAPH_TENANT_ID');
         break;
-        
+
       case 'spotify':
         this.addToEnv(env, 'SPOTIFY_CLIENT_ID');
         this.addToEnv(env, 'SPOTIFY_CLIENT_SECRET');
         break;
-        
+
       case 'youtube':
         this.addToEnv(env, 'YOUTUBE_CLIENT_ID');
         this.addToEnv(env, 'YOUTUBE_CLIENT_SECRET');
         break;
-        
+
       case 'github':
         this.addToEnv(env, 'GITHUB_TOKEN');
         break;
-        
+
       case 'notion':
         this.addToEnv(env, 'NOTION_TOKEN');
         break;
-        
+
       case 'whatsapp':
         this.addToEnv(env, 'WHATSAPP_ACCESS_TOKEN');
         this.addToEnv(env, 'WHATSAPP_PHONE_NUMBER_ID');
@@ -277,17 +277,21 @@ export class CredentialsManager {
     }
 
     const encrypted: any = {};
-    
+
     for (const [key, credential] of Object.entries(credentials)) {
       if (credential?.value) {
         const iv = crypto.randomBytes(IV_LENGTH);
-        const cipher = crypto.createCipheriv(ENCRYPTION_ALGORITHM, this.encryptionKey, iv) as crypto.CipherGCM;
-        
+        const cipher = crypto.createCipheriv(
+          ENCRYPTION_ALGORITHM,
+          this.encryptionKey,
+          iv
+        ) as crypto.CipherGCM;
+
         let encryptedValue = cipher.update(credential.value, 'utf8', 'hex');
         encryptedValue += cipher.final('hex');
-        
+
         const authTag = cipher.getAuthTag();
-        
+
         encrypted[key] = {
           ...credential,
           value: encryptedValue,
@@ -310,21 +314,25 @@ export class CredentialsManager {
     }
 
     const decrypted: ServiceCredentials = {};
-    
+
     for (const [key, credential] of Object.entries(encryptedCredentials)) {
       if (credential && typeof credential === 'object' && 'value' in credential) {
         const cred = credential as any;
-        
+
         if (cred.encrypted && cred.iv && cred.authTag) {
           const iv = Buffer.from(cred.iv, 'hex');
           const authTag = Buffer.from(cred.authTag, 'hex');
-          
-          const decipher = crypto.createDecipheriv(ENCRYPTION_ALGORITHM, this.encryptionKey, iv) as crypto.DecipherGCM;
+
+          const decipher = crypto.createDecipheriv(
+            ENCRYPTION_ALGORITHM,
+            this.encryptionKey,
+            iv
+          ) as crypto.DecipherGCM;
           decipher.setAuthTag(authTag);
-          
+
           let decryptedValue = decipher.update(cred.value, 'hex', 'utf8');
           decryptedValue += decipher.final('utf8');
-          
+
           decrypted[key as keyof ServiceCredentials] = {
             value: decryptedValue,
             encrypted: false,
@@ -353,14 +361,22 @@ export class CredentialsManager {
     const warnings: string[] = [];
 
     const requirements = {
-      'trello': ['TRELLO_API_KEY', 'TRELLO_TOKEN'],
-      'email-advanced': ['MICROSOFT_GRAPH_CLIENT_ID', 'MICROSOFT_GRAPH_CLIENT_SECRET', 'MICROSOFT_GRAPH_TENANT_ID'],
-      'onedrive-sharepoint': ['MICROSOFT_GRAPH_CLIENT_ID', 'MICROSOFT_GRAPH_CLIENT_SECRET', 'MICROSOFT_GRAPH_TENANT_ID'],
-      'spotify': ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET'],
-      'youtube': ['YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET'],
-      'github': ['GITHUB_TOKEN'],
-      'notion': ['NOTION_TOKEN'],
-      'whatsapp': ['WHATSAPP_ACCESS_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID'],
+      trello: ['TRELLO_API_KEY', 'TRELLO_TOKEN'],
+      'email-advanced': [
+        'MICROSOFT_GRAPH_CLIENT_ID',
+        'MICROSOFT_GRAPH_CLIENT_SECRET',
+        'MICROSOFT_GRAPH_TENANT_ID',
+      ],
+      'onedrive-sharepoint': [
+        'MICROSOFT_GRAPH_CLIENT_ID',
+        'MICROSOFT_GRAPH_CLIENT_SECRET',
+        'MICROSOFT_GRAPH_TENANT_ID',
+      ],
+      spotify: ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET'],
+      youtube: ['YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET'],
+      github: ['GITHUB_TOKEN'],
+      notion: ['NOTION_TOKEN'],
+      whatsapp: ['WHATSAPP_ACCESS_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID'],
     };
 
     for (const serverId of enabledServers) {
@@ -380,8 +396,10 @@ export class CredentialsManager {
       if (credential?.expiresAt) {
         const expiresAt = new Date(credential.expiresAt);
         const now = new Date();
-        const daysUntilExpiry = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        
+        const daysUntilExpiry = Math.ceil(
+          (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
         if (daysUntilExpiry < 7) {
           warnings.push(`${key} expires in ${daysUntilExpiry} days`);
         }

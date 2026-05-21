@@ -7,7 +7,8 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background: #0f172a;
   color: #e2e8f0;
   line-height: 1.6;
@@ -83,7 +84,8 @@ body {
 }
 
 /* Loading & Error States */
-.loading, .error {
+.loading,
+.error {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -102,7 +104,9 @@ body {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error h2 {
@@ -235,7 +239,8 @@ body {
   color: #10b981;
 }
 
-.disabled, .muted {
+.disabled,
+.muted {
   color: #6b7280;
 }
 
@@ -393,7 +398,8 @@ body {
   flex-wrap: wrap;
 }
 
-.search-input, .filter-select {
+.search-input,
+.filter-select {
   padding: 0.75rem;
   background: #1e293b;
   border: 2px solid #334155;
@@ -552,14 +558,18 @@ body {
   gap: 1.5rem;
 }
 
-.tool-details, .parameters-section, .results-section {
+.tool-details,
+.parameters-section,
+.results-section {
   background: #1e293b;
   padding: 1.5rem;
   border-radius: 8px;
   border: 2px solid #334155;
 }
 
-.tool-details h3, .parameters-section h3, .results-section h3 {
+.tool-details h3,
+.parameters-section h3,
+.results-section h3 {
   margin-bottom: 1rem;
   color: #60a5fa;
 }
@@ -629,7 +639,8 @@ body {
   font-weight: normal;
 }
 
-.param-input, .param-textarea {
+.param-input,
+.param-textarea {
   padding: 0.75rem;
   background: #0f172a;
   border: 2px solid #334155;
@@ -638,7 +649,8 @@ body {
   font-family: 'Courier New', monospace;
 }
 
-.param-input:focus, .param-textarea:focus {
+.param-input:focus,
+.param-textarea:focus {
   outline: none;
   border-color: #3b82f6;
 }
@@ -654,7 +666,7 @@ body {
   cursor: pointer;
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-label input[type='checkbox'] {
   width: 20px;
   height: 20px;
 }
@@ -734,7 +746,8 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .app-header, .app-footer {
+  .app-header,
+  .app-footer {
     padding: 1rem;
   }
 
@@ -742,7 +755,9 @@ body {
     padding: 1rem;
   }
 
-  .stats-grid, .servers-grid, .tools-grid {
+  .stats-grid,
+  .servers-grid,
+  .tools-grid {
     grid-template-columns: 1fr;
   }
 
@@ -754,7 +769,8 @@ body {
     flex-direction: column;
   }
 
-  .search-input, .filter-select {
+  .search-input,
+  .filter-select {
     width: 100%;
   }
 }

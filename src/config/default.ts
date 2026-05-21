@@ -20,13 +20,13 @@ export const defaultConfig: HubConfig = {
 
 export function loadConfig(): HubConfig {
   const configPath = process.env.HUB_CONFIG;
-  
+
   if (configPath) {
     try {
       const fullPath = resolve(configPath);
       const configData = readFileSync(fullPath, 'utf-8');
       const config = JSON.parse(configData);
-      
+
       // Merge with defaults
       return {
         ...defaultConfig,

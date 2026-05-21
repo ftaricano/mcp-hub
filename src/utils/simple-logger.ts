@@ -13,7 +13,7 @@ export interface SimpleLogger {
 
 export function createLogger(component?: string): SimpleLogger {
   const prefix = component ? `[${component}]` : '[Hub]';
-  
+
   return {
     debug: (message: string, meta?: any) => {
       if (process.env.LOG_LEVEL === 'debug') {
@@ -32,6 +32,6 @@ export function createLogger(component?: string): SimpleLogger {
     },
     error: (message: string, meta?: any) => {
       console.error(`${prefix} ERROR: ${message}`, meta || '');
-    }
+    },
   };
 }

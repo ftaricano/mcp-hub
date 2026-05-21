@@ -33,7 +33,12 @@ describe('tool argument redaction', () => {
       regularField: 'safe',
     });
 
-    expect(summary.argumentKeys).toEqual(['authorization', 'cookie', 'regularField', 'sessionToken']);
+    expect(summary.argumentKeys).toEqual([
+      'authorization',
+      'cookie',
+      'regularField',
+      'sessionToken',
+    ]);
     expect(summary.sensitiveKeys).toEqual(['authorization', 'cookie', 'sessionToken']);
   });
 });

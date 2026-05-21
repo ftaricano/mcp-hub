@@ -33,9 +33,7 @@ Use one of the following blocks inside your LM Studio config under `mcpServers`.
   "mcpServers": {
     "hub": {
       "command": "node",
-      "args": [
-        "/absolute/path/to/mcp-hub/dist/index.js"
-      ],
+      "args": ["/absolute/path/to/mcp-hub/dist/index.js"],
       "env": {
         "HUB_CONFIG": "/absolute/path/to/mcp-hub/hub-config.json",
         "MCP_DEBUG": "true",

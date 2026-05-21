@@ -76,7 +76,10 @@ describe('ServerRegistry hardening', () => {
       },
     });
 
-    const result = (registry as any).buildServerEnvironment('docs-server', config) as Record<string, string>;
+    const result = (registry as any).buildServerEnvironment('docs-server', config) as Record<
+      string,
+      string
+    >;
 
     expect(result.PATH).toBe('/usr/bin');
     expect(result.HOME).toBe('/tmp/home');
@@ -99,7 +102,9 @@ describe('ServerRegistry hardening', () => {
       },
     } as any);
 
-    await expect(registry.callTool('docs-server', 'create_doc', { title: 'test' })).rejects.toThrow('boom');
+    await expect(registry.callTool('docs-server', 'create_doc', { title: 'test' })).rejects.toThrow(
+      'boom'
+    );
     expect(callToolMock).toHaveBeenCalledTimes(1);
   });
 
@@ -107,13 +112,16 @@ describe('ServerRegistry hardening', () => {
     const registry = new ServerRegistry();
     const callToolMock = vi.fn().mockRejectedValue(new Error('mutating-call-failed'));
 
-    (registry as any).servers.set('docs-server', createServerConfig({
-      toolCallRetries: {
-        enabled: true,
-        maxAttempts: 4,
-        retryableTools: ['search_docs'],
-      },
-    }));
+    (registry as any).servers.set(
+      'docs-server',
+      createServerConfig({
+        toolCallRetries: {
+          enabled: true,
+          maxAttempts: 4,
+          retryableTools: ['search_docs'],
+        },
+      })
+    );
 
     vi.spyOn(registry, 'getConnection').mockResolvedValue({
       client: {
@@ -121,23 +129,29 @@ describe('ServerRegistry hardening', () => {
       },
     } as any);
 
-    await expect(registry.callTool('docs-server', 'create_doc', { title: 'sprint notes' })).rejects.toThrow('mutating-call-failed');
+    await expect(
+      registry.callTool('docs-server', 'create_doc', { title: 'sprint notes' })
+    ).rejects.toThrow('mutating-call-failed');
     expect(callToolMock).toHaveBeenCalledTimes(1);
   });
 
   it('retries only explicitly allowlisted idempotent tools', async () => {
     const registry = new ServerRegistry();
-    const callToolMock = vi.fn()
+    const callToolMock = vi
+      .fn()
       .mockRejectedValueOnce(new Error('transient'))
       .mockResolvedValueOnce({ ok: true });
 
-    (registry as any).servers.set('docs-server', createServerConfig({
-      toolCallRetries: {
-        enabled: true,
-        maxAttempts: 2,
-        retryableTools: ['search_docs'],
-      },
-    }));
+    (registry as any).servers.set(
+      'docs-server',
+      createServerConfig({
+        toolCallRetries: {
+          enabled: true,
+          maxAttempts: 2,
+          retryableTools: ['search_docs'],
+        },
+      })
+    );
 
     vi.spyOn(registry, 'getConnection').mockResolvedValue({
       client: {
@@ -145,7 +159,9 @@ describe('ServerRegistry hardening', () => {
       },
     } as any);
 
-    await expect(registry.callTool('docs-server', 'search_docs', { query: 'hardening' })).resolves.toEqual({ ok: true });
+    await expect(
+      registry.callTool('docs-server', 'search_docs', { query: 'hardening' })
+    ).resolves.toEqual({ ok: true });
     expect(callToolMock).toHaveBeenCalledTimes(2);
   });
 });

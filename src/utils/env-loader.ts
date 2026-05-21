@@ -14,21 +14,20 @@ function resolveEnvPath(serverId: string): string {
   const genericEnvVar = `MCP_${normalizedServerId}_ENV_PATH`;
 
   const legacyAliases: Record<string, string[]> = {
-    'outlook-fernando': ['MCP_EMAIL_ENV_PATH'],
-    'outlook-faturamento': ['MCP_EMAIL_ENV_PATH'],
+    'email-primary': ['MCP_EMAIL_ENV_PATH'],
+    'email-billing': ['MCP_EMAIL_ENV_PATH'],
     'onedrive-sharepoint': ['MCP_ONEDRIVE_ENV_PATH'],
   };
 
-  const candidateEnvVars = [
-    genericEnvVar,
-    ...(legacyAliases[serverId] || []),
-  ];
+  const candidateEnvVars = [genericEnvVar, ...(legacyAliases[serverId] || [])];
 
   for (const envVar of candidateEnvVars) {
     const envPath = process.env[envVar];
     if (envPath) {
       if (envVar !== genericEnvVar) {
-        logger.warn(`Using legacy environment alias ${envVar} for ${serverId}. Prefer ${genericEnvVar}.`);
+        logger.warn(
+          `Using legacy environment alias ${envVar} for ${serverId}. Prefer ${genericEnvVar}.`
+        );
       }
       logger.debug(`Using ${envVar} for server environment`, { serverId, envVar, envPath });
       return envPath;
@@ -52,7 +51,7 @@ export function loadEnvFromPath(envPath: string): Record<string, string> {
 
     const envContent = readFileSync(envPath, 'utf-8');
     const parsed = parse(envContent);
-    
+
     logger.info(`Loaded ${Object.keys(parsed).length} environment variables from ${envPath}`);
     return parsed;
   } catch (error) {
@@ -69,7 +68,9 @@ export function loadEnvFromPath(envPath: string): Record<string, string> {
 export function loadServerEnv(serverId: string, explicitEnvPath?: string): Record<string, string> {
   const envPath = explicitEnvPath || resolveEnvPath(serverId);
   if (!envPath) {
-    logger.debug(`No environment path configured for server: ${serverId}. Set MCP_${normalizeServerIdForEnv(serverId)}_ENV_PATH or envFile to enable per-server .env loading.`);
+    logger.debug(
+      `No environment path configured for server: ${serverId}. Set MCP_${normalizeServerIdForEnv(serverId)}_ENV_PATH or envFile to enable per-server .env loading.`
+    );
     return {};
   }
 

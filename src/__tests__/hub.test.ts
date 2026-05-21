@@ -12,8 +12,8 @@ vi.mock('child_process', () => ({
     stderr: { on: vi.fn(), pipe: vi.fn() },
     stdin: { write: vi.fn(), end: vi.fn() },
     on: vi.fn(),
-    kill: vi.fn()
-  }))
+    kill: vi.fn(),
+  })),
 }));
 
 describe('MCP Hub Core Tests', () => {
@@ -31,18 +31,18 @@ describe('MCP Hub Core Tests', () => {
             query: { type: 'string' },
             serverName: { type: 'string' },
             limit: { type: 'number' },
-            offset: { type: 'number' }
-          }
+            offset: { type: 'number' },
+          },
         },
         'call-tool': {
           type: 'object',
           properties: {
             serverName: { type: 'string' },
             toolName: { type: 'string' },
-            toolArgs: { type: 'object' }
+            toolArgs: { type: 'object' },
           },
-          required: ['serverName', 'toolName', 'toolArgs']
-        }
+          required: ['serverName', 'toolName', 'toolArgs'],
+        },
       };
 
       expect(toolSchemas['call-tool'].required).toContain('serverName');
@@ -55,10 +55,10 @@ describe('MCP Hub Core Tests', () => {
       const testCases = [
         { query: 'enviar email', expectedAction: 'enviar', expectedTarget: 'email' },
         { query: 'tocar música', expectedAction: 'tocar', expectedTarget: 'música' },
-        { query: 'criar tarefa', expectedAction: 'criar', expectedTarget: 'tarefa' }
+        { query: 'criar tarefa', expectedAction: 'criar', expectedTarget: 'tarefa' },
       ];
 
-      testCases.forEach(test => {
+      testCases.forEach((test) => {
         // Simple intent extraction
         const words = test.query.split(' ');
         expect(words[0]).toBe(test.expectedAction);
@@ -70,7 +70,7 @@ describe('MCP Hub Core Tests', () => {
       const tools = [
         { name: 'send_email', score: 100 },
         { name: 'list_emails', score: 80 },
-        { name: 'play_track', score: 0 }
+        { name: 'play_track', score: 0 },
       ];
 
       const sorted = tools.sort((a, b) => b.score - a.score);
@@ -87,14 +87,14 @@ describe('MCP Hub Core Tests', () => {
     });
 
     it('should register servers correctly', () => {
-      registry.set('spotify', { 
-        command: 'node', 
-        args: ['spotify/dist/index.js'] 
+      registry.set('spotify', {
+        command: 'node',
+        args: ['spotify/dist/index.js'],
       });
-      
-      registry.set('email', { 
-        command: 'node', 
-        args: ['email/dist/index.js'] 
+
+      registry.set('email', {
+        command: 'node',
+        args: ['email/dist/index.js'],
       });
 
       expect(registry.size).toBe(2);
@@ -112,12 +112,12 @@ describe('MCP Hub Core Tests', () => {
       const cache = new Map();
       const tools = [
         { server: 'spotify', name: 'play_track' },
-        { server: 'email', name: 'send_email' }
+        { server: 'email', name: 'send_email' },
       ];
 
       // Cache tools
       cache.set('tools:all', tools);
-      
+
       // Retrieve from cache
       const cached = cache.get('tools:all');
       expect(cached).toEqual(tools);
@@ -127,10 +127,10 @@ describe('MCP Hub Core Tests', () => {
     it('should respect TTL for cache entries', () => {
       const cache = new Map();
       const ttl = 5 * 60 * 1000; // 5 minutes
-      
-      cache.set('test', { 
-        value: 'data', 
-        expires: Date.now() + ttl 
+
+      cache.set('test', {
+        value: 'data',
+        expires: Date.now() + ttl,
       });
 
       const entry = cache.get('test');
@@ -166,8 +166,7 @@ describe('MCP Hub Core Tests', () => {
 
   describe('Performance', () => {
     it('should handle concurrent tool calls', async () => {
-      const callTool = (id: number) => 
-        Promise.resolve({ id, result: 'success' });
+      const callTool = (id: number) => Promise.resolve({ id, result: 'success' });
 
       const promises = Array.from({ length: 10 }, (_, i) => callTool(i));
       const results = await Promise.all(promises);
@@ -180,29 +179,28 @@ describe('MCP Hub Core Tests', () => {
     });
 
     it('should timeout long-running operations', async () => {
-      const timeout = (ms: number) => 
-        new Promise(resolve => setTimeout(resolve, ms));
+      const timeout = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
       const withTimeout = async (promise: Promise<any>, ms: number) => {
         return Promise.race([
           promise,
-          timeout(ms).then(() => { throw new Error('Operation timed out'); })
+          timeout(ms).then(() => {
+            throw new Error('Operation timed out');
+          }),
         ]);
       };
 
       const slowOperation = timeout(1000);
-      await expect(
-        withTimeout(slowOperation, 100)
-      ).rejects.toThrow('Operation timed out');
+      await expect(withTimeout(slowOperation, 100)).rejects.toThrow('Operation timed out');
     });
   });
 
   describe('Portuguese Language Processing', () => {
     it('should handle Portuguese keywords correctly', () => {
       const keywords = {
-        'email': ['email', 'e-mail', 'mensagem', 'correio'],
-        'music': ['música', 'som', 'tocar', 'playlist'],
-        'task': ['tarefa', 'card', 'atividade', 'projeto']
+        email: ['email', 'e-mail', 'mensagem', 'correio'],
+        music: ['música', 'som', 'tocar', 'playlist'],
+        task: ['tarefa', 'card', 'atividade', 'projeto'],
       };
 
       expect(keywords.email).toContain('mensagem');
@@ -211,10 +209,11 @@ describe('MCP Hub Core Tests', () => {
     });
 
     it('should normalize Portuguese text', () => {
-      const normalize = (text: string) => 
-        text.toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '');
+      const normalize = (text: string) =>
+        text
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
 
       expect(normalize('AÇÃO')).toBe('acao');
       expect(normalize('música')).toBe('musica');
@@ -225,9 +224,9 @@ describe('MCP Hub Core Tests', () => {
   describe('Tool Categories', () => {
     it('should categorize tools correctly', () => {
       const categories = {
-        'Comunicação': ['send_email', 'list_emails', 'send_message'],
-        'Entretenimento': ['play_track', 'pause_track', 'search_tracks'],
-        'Produtividade': ['add_card_to_list', 'create_board', 'get_lists']
+        Comunicação: ['send_email', 'list_emails', 'send_message'],
+        Entretenimento: ['play_track', 'pause_track', 'search_tracks'],
+        Produtividade: ['add_card_to_list', 'create_board', 'get_lists'],
       };
 
       expect(categories['Comunicação']).toContain('send_email');

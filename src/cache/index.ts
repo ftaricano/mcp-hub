@@ -11,7 +11,7 @@ export class HubCache {
 
   constructor(ttlSeconds: number = 300, enabled: boolean = true) {
     this.enabled = enabled;
-    
+
     // Main cache for responses
     this.cache = new NodeCache({
       stdTTL: ttlSeconds,
@@ -86,9 +86,10 @@ export class HubCache {
   setTools(serverId: string, tools: ToolMetadata[], ttl?: number): boolean {
     if (!this.enabled) return false;
 
-    const result = ttl !== undefined 
-      ? this.toolsCache.set(`tools:${serverId}`, tools, ttl)
-      : this.toolsCache.set(`tools:${serverId}`, tools);
+    const result =
+      ttl !== undefined
+        ? this.toolsCache.set(`tools:${serverId}`, tools, ttl)
+        : this.toolsCache.set(`tools:${serverId}`, tools);
     logger.debug('Tools cache set:', { serverId, toolCount: tools.length, success: result });
     return result;
   }
@@ -105,8 +106,8 @@ export class HubCache {
     if (!this.enabled) return [];
 
     const allTools: ToolMetadata[] = [];
-    const keys = this.toolsCache.keys().filter(key => key.startsWith('tools:'));
-    
+    const keys = this.toolsCache.keys().filter((key) => key.startsWith('tools:'));
+
     for (const key of keys) {
       const tools = this.toolsCache.get<ToolMetadata[]>(key);
       if (tools) {
@@ -140,9 +141,8 @@ export class HubCache {
     if (!this.enabled) return false;
 
     const key = `result:${serverId}:${toolName}:${argsHash}`;
-    const success = ttl !== undefined 
-      ? this.cache.set(key, result, ttl)
-      : this.cache.set(key, result);
+    const success =
+      ttl !== undefined ? this.cache.set(key, result, ttl) : this.cache.set(key, result);
     logger.debug('Tool result cached:', { serverId, toolName, success });
     return success;
   }
@@ -191,10 +191,10 @@ export class HubCache {
   clearExpired(): void {
     const mainDeleted = this.cache.keys().length;
     const toolsDeleted = this.toolsCache.keys().length;
-    
+
     this.cache.flushAll();
     this.toolsCache.flushAll();
-    
+
     logger.info('Expired cache entries cleared:', { mainDeleted, toolsDeleted });
   }
 
@@ -205,7 +205,7 @@ export class HubCache {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash).toString(36);

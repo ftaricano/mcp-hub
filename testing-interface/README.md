@@ -57,14 +57,17 @@ Visit: http://localhost:5173
 The backend runs on port 3000.
 
 ### Servers
+
 - `GET /api/servers` — list all configured servers
 - `GET /api/servers/:serverId/tools` — list tools for a server
 
 ### Tools
+
 - `GET /api/tools` — list all aggregated tools
 - `GET /api/tools/:serverId/:toolName` — get tool details
 
 ### Execution
+
 - `POST /api/execute` — execute a tool
 
 Example request:
@@ -81,6 +84,7 @@ Example request:
 ```
 
 ### Health
+
 - `GET /api/health` — backend health status
 
 ## Architecture
@@ -107,28 +111,36 @@ testing-interface/
 ## Frontend capabilities
 
 ### Dashboard
+
 Overview of:
+
 - active / connected servers,
 - total tool count,
 - distribution by server,
 - health indicators.
 
 ### Server list
+
 Per-server visibility into:
+
 - connection status,
 - tool count,
 - protocol,
 - health state.
 
 ### Tool browser
+
 Browse with:
+
 - search by name or description,
 - filters by server and category,
 - tool cards,
 - quick navigation into testing.
 
 ### Tool tester
+
 Interactive execution with:
+
 - schema-driven forms,
 - support for different parameter types,
 - result rendering,
@@ -163,14 +175,17 @@ npm run preview
 ## Troubleshooting
 
 Backend will not start:
+
 - verify port 3000 is free,
 - install dependencies.
 
 Frontend will not connect:
+
 - verify the backend is running on http://localhost:3000,
 - check backend CORS settings.
 
 Tools do not appear:
+
 - inspect backend logs,
 - confirm `hub-config.json` contains enabled downstream servers,
 - confirm the hub can connect to those downstream MCP servers.

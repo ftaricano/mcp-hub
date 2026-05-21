@@ -12,11 +12,11 @@ export function ToolBrowser({ tools, onToolSelect }: ToolBrowserProps) {
   const [selectedServer, setSelectedServer] = useState<string>('');
 
   // Get unique categories and servers
-  const categories = Array.from(new Set(tools.map(t => t.category || 'Outros')));
-  const servers = Array.from(new Set(tools.map(t => t.serverId)));
+  const categories = Array.from(new Set(tools.map((t) => t.category || 'Outros')));
+  const servers = Array.from(new Set(tools.map((t) => t.serverId)));
 
   // Filter tools
-  const filteredTools = tools.filter(tool => {
+  const filteredTools = tools.filter((tool) => {
     const matchesSearch =
       searchQuery === '' ||
       tool.toolName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -46,17 +46,17 @@ export function ToolBrowser({ tools, onToolSelect }: ToolBrowserProps) {
           type="text"
           placeholder="🔍 Buscar ferramentas..."
           value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="search-input"
         />
 
         <select
           value={selectedCategory}
-          onChange={e => setSelectedCategory(e.target.value)}
+          onChange={(e) => setSelectedCategory(e.target.value)}
           className="filter-select"
         >
           <option value="">Todas as Categorias</option>
-          {categories.sort().map(category => (
+          {categories.sort().map((category) => (
             <option key={category} value={category}>
               {category}
             </option>
@@ -65,11 +65,11 @@ export function ToolBrowser({ tools, onToolSelect }: ToolBrowserProps) {
 
         <select
           value={selectedServer}
-          onChange={e => setSelectedServer(e.target.value)}
+          onChange={(e) => setSelectedServer(e.target.value)}
           className="filter-select"
         >
           <option value="">Todos os Servidores</option>
-          {servers.sort().map(server => (
+          {servers.sort().map((server) => (
             <option key={server} value={server}>
               {server}
             </option>
@@ -91,7 +91,7 @@ export function ToolBrowser({ tools, onToolSelect }: ToolBrowserProps) {
       </div>
 
       <div className="tools-grid">
-        {filteredTools.map(tool => (
+        {filteredTools.map((tool) => (
           <div key={`${tool.serverId}-${tool.toolName}`} className="tool-card">
             <div className="tool-card-header">
               <h3>{tool.ptName || tool.toolName}</h3>
@@ -99,30 +99,21 @@ export function ToolBrowser({ tools, onToolSelect }: ToolBrowserProps) {
             </div>
 
             <div className="tool-card-body">
-              <p className="tool-description">
-                {tool.ptDescription || tool.description}
-              </p>
+              <p className="tool-description">{tool.ptDescription || tool.description}</p>
 
               <div className="tool-meta">
-                {tool.category && (
-                  <span className="meta-badge category">{tool.category}</span>
-                )}
+                {tool.category && <span className="meta-badge category">{tool.category}</span>}
                 {tool.complexity && (
                   <span className={`meta-badge complexity ${tool.complexity}`}>
                     {tool.complexity}
                   </span>
                 )}
                 {tool.reliabilityScore !== undefined && (
-                  <span className="meta-badge reliability">
-                    ⭐ {tool.reliabilityScore}/10
-                  </span>
+                  <span className="meta-badge reliability">⭐ {tool.reliabilityScore}/10</span>
                 )}
               </div>
 
-              <button
-                onClick={() => onToolSelect(tool)}
-                className="test-tool-btn"
-              >
+              <button onClick={() => onToolSelect(tool)} className="test-tool-btn">
                 🧪 Testar Ferramenta
               </button>
             </div>
