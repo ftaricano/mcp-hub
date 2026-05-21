@@ -21,7 +21,7 @@ export function createServerRoutes(hubClient: HubClient): Router {
           const tools = await hubClient.getToolsForServer(server.id);
           return {
             ...server,
-            toolCount: tools.length
+            toolCount: tools.length,
           };
         })
       );
@@ -30,9 +30,9 @@ export function createServerRoutes(hubClient: HubClient): Router {
         success: true,
         data: {
           servers: serversWithCounts,
-          total: serversWithCounts.length
+          total: serversWithCounts.length,
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       res.json(response);
@@ -41,9 +41,9 @@ export function createServerRoutes(hubClient: HubClient): Router {
         success: false,
         error: {
           code: 'SERVER_LIST_ERROR',
-          message: error.message || 'Failed to list servers'
+          message: error.message || 'Failed to list servers',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
       res.status(500).json(response);
     }
@@ -65,9 +65,9 @@ export function createServerRoutes(hubClient: HubClient): Router {
           serverName: serverId,
           tools,
           total: tools.length,
-          hasMore: false
+          hasMore: false,
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       res.json(response);
@@ -76,9 +76,9 @@ export function createServerRoutes(hubClient: HubClient): Router {
         success: false,
         error: {
           code: 'TOOLS_LIST_ERROR',
-          message: error.message || 'Failed to list tools'
+          message: error.message || 'Failed to list tools',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
       res.status(500).json(response);
     }

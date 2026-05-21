@@ -18,7 +18,7 @@ export class MockServerManager {
       tools: response.tools || [],
       result: response.result || { content: [{ type: 'text', text: 'Mock result' }] },
       latency: response.latency || 100,
-      error: response.error
+      error: response.error,
     });
   }
 
@@ -50,7 +50,7 @@ export class MockServerManager {
     }
 
     const latency = this.getServerLatency(serverId);
-    await new Promise(resolve => setTimeout(resolve, latency));
+    await new Promise((resolve) => setTimeout(resolve, latency));
 
     const mockResponse = this.servers.get(serverId);
     if (mockResponse?.error) {
@@ -73,7 +73,7 @@ export const MOCK_TOOLS_BY_SERVER = {
     {
       name: 'get_boards',
       description: 'List all boards',
-      inputSchema: { type: 'object', properties: {} }
+      inputSchema: { type: 'object', properties: {} },
     },
     {
       name: 'add_card_to_list',
@@ -82,14 +82,14 @@ export const MOCK_TOOLS_BY_SERVER = {
         type: 'object',
         properties: {
           listId: { type: 'string' },
-          name: { type: 'string' }
+          name: { type: 'string' },
         },
-        required: ['listId', 'name']
-      }
-    }
+        required: ['listId', 'name'],
+      },
+    },
   ],
 
-  'outlook-fernando': [
+  'email-primary': [
     {
       name: 'list_emails',
       description: 'List emails',
@@ -97,9 +97,9 @@ export const MOCK_TOOLS_BY_SERVER = {
         type: 'object',
         properties: {
           search: { type: 'string' },
-          limit: { type: 'number' }
-        }
-      }
+          limit: { type: 'number' },
+        },
+      },
     },
     {
       name: 'send_email',
@@ -109,11 +109,11 @@ export const MOCK_TOOLS_BY_SERVER = {
         properties: {
           to: { type: 'string' },
           subject: { type: 'string' },
-          body: { type: 'string' }
+          body: { type: 'string' },
         },
-        required: ['to', 'subject', 'body']
-      }
-    }
+        required: ['to', 'subject', 'body'],
+      },
+    },
   ],
 
   spotify: [
@@ -123,10 +123,10 @@ export const MOCK_TOOLS_BY_SERVER = {
       inputSchema: {
         type: 'object',
         properties: {
-          trackId: { type: 'string' }
+          trackId: { type: 'string' },
         },
-        required: ['trackId']
-      }
+        required: ['trackId'],
+      },
     },
     {
       name: 'search_tracks',
@@ -134,12 +134,12 @@ export const MOCK_TOOLS_BY_SERVER = {
       inputSchema: {
         type: 'object',
         properties: {
-          query: { type: 'string' }
+          query: { type: 'string' },
         },
-        required: ['query']
-      }
-    }
-  ]
+        required: ['query'],
+      },
+    },
+  ],
 };
 
 export const MOCK_EMAIL_DATA = {
@@ -147,42 +147,42 @@ export const MOCK_EMAIL_DATA = {
     {
       id: 'email-1',
       subject: 'Projeto de desenvolvimento - Reunião',
-      from: 'cliente@empresa.com',
+      from: 'client@example.com',
       body: 'Precisamos agendar uma reunião para discutir o projeto.',
       receivedDateTime: '2024-01-15T10:30:00Z',
       hasAttachments: false,
-      isRead: false
+      isRead: false,
     },
     {
       id: 'email-2',
       subject: 'Proposta comercial - Urgente',
-      from: 'vendas@parceiro.com',
+      from: 'sales@partner.example',
       body: 'Segue em anexo a proposta solicitada.',
       receivedDateTime: '2024-01-15T09:15:00Z',
       hasAttachments: true,
-      isRead: true
-    }
-  ]
+      isRead: true,
+    },
+  ],
 };
 
 export const MOCK_TRELLO_DATA = {
   boards: [
     { id: 'board-1', name: 'Desenvolvimento', desc: 'Board principal' },
-    { id: 'board-2', name: 'Marketing', desc: 'Campanhas e conteúdo' }
+    { id: 'board-2', name: 'Marketing', desc: 'Campanhas e conteúdo' },
   ],
   lists: [
     { id: 'list-1', name: 'Backlog', idBoard: 'board-1' },
     { id: 'list-2', name: 'Em Progresso', idBoard: 'board-1' },
-    { id: 'list-3', name: 'Concluído', idBoard: 'board-1' }
+    { id: 'list-3', name: 'Concluído', idBoard: 'board-1' },
   ],
   cards: [
     {
       id: 'card-1',
       name: 'Implementar autenticação',
       desc: 'Sistema de login e registro',
-      idList: 'list-1'
-    }
-  ]
+      idList: 'list-1',
+    },
+  ],
 };
 
 export const MOCK_SPOTIFY_DATA = {
@@ -191,21 +191,21 @@ export const MOCK_SPOTIFY_DATA = {
       id: 'track-1',
       name: 'Focus Music',
       artist: 'Ambient Artist',
-      duration: 180000
+      duration: 180000,
     },
     {
       id: 'track-2',
       name: 'Deep Work',
       artist: 'Concentration',
-      duration: 240000
-    }
+      duration: 240000,
+    },
   ],
   playlists: [
     {
       id: 'playlist-1',
       name: 'Work Focus',
       description: 'Music for productivity',
-      tracks: ['track-1', 'track-2']
-    }
-  ]
+      tracks: ['track-1', 'track-2'],
+    },
+  ],
 };

@@ -9,7 +9,11 @@
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit"
   },
-  "keywords": ["mcp", "testing", "hub"],
+  "keywords": [
+    "mcp",
+    "testing",
+    "hub"
+  ],
   "author": "Fernando Taricano",
   "license": "MIT",
   "dependencies": {

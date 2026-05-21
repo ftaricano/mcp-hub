@@ -16,7 +16,7 @@ export function ServerList({ servers, onRefresh }: ServerListProps) {
       </div>
 
       <div className="servers-grid">
-        {servers.map(server => (
+        {servers.map((server) => (
           <div key={server.id} className="server-card">
             <div className="server-card-header">
               <h3>{server.name}</h3>

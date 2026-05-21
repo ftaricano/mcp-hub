@@ -4,33 +4,33 @@
 export interface ToolIntelligence {
   server_id: string;
   tool_name: string;
-  
+
   // Categorização inteligente
   category: string;
   subcategory: string;
   action_type: 'create' | 'read' | 'update' | 'delete' | 'search' | 'control' | 'analyze';
-  
+
   // Mapeamento multilíngue
   pt_name: string;
   pt_description: string;
   pt_keywords: string[];
   en_keywords: string[];
-  
+
   // Contexto de uso
   use_cases: string[];
   typical_params: string[];
   success_indicators: string[];
-  
+
   // Inteligência de recomendação
   related_tools: string[];
   prerequisites?: string[];
   follows_tool?: string[];
-  
+
   // Performance e confiabilidade
   performance_score: number; // 1-10
   reliability_score: number; // 1-10
   complexity_level: 'basic' | 'intermediate' | 'advanced';
-  
+
   // Detecção automática de contexto
   context_triggers: string[];
   intent_patterns: string[];
@@ -52,7 +52,7 @@ export class ToolIntelligenceSystem {
       .replace(/[^\p{L}\p{N}\s_-]/gu, ' ')
       .replace(/[_-]/g, ' ')
       .split(/\s+/)
-      .filter(token => token.length > 1);
+      .filter((token) => token.length > 1);
   }
 
   private static levenshteinDistance(a: string, b: string): number {
@@ -92,11 +92,19 @@ export class ToolIntelligenceSystem {
       return false;
     }
 
-    const maxDistance = Math.max(1, Math.floor(Math.min(queryToken.length, candidateToken.length) / 4));
+    const maxDistance = Math.max(
+      1,
+      Math.floor(Math.min(queryToken.length, candidateToken.length) / 4)
+    );
     return this.levenshteinDistance(queryToken, candidateToken) <= maxDistance;
   }
 
-  private static scoreTokenMatches(queryTokens: string[], candidateTokens: string[], exactWeight: number, fuzzyWeight: number): number {
+  private static scoreTokenMatches(
+    queryTokens: string[],
+    candidateTokens: string[],
+    exactWeight: number,
+    fuzzyWeight: number
+  ): number {
     let score = 0;
 
     for (const queryToken of queryTokens) {
@@ -120,22 +128,31 @@ export class ToolIntelligenceSystem {
   static initialize(): void {
     this.intelligence.clear();
     // === EMAIL TOOLS ===
-    // Outlook Fernando
+    // Primary email account
     this.addIntelligence({
-      server_id: 'outlook-fernando',
+      server_id: 'email-primary',
       tool_name: 'list_emails',
       category: 'Comunicação',
       subcategory: 'Email',
       action_type: 'read',
       pt_name: 'Listar Emails',
-      pt_description: 'Lista e busca emails na caixa de entrada do Fernando',
-      pt_keywords: ['email', 'emails', 'mensagem', 'mensagens', 'caixa de entrada', 'inbox', 'listar', 'buscar', 'fernando'],
+      pt_description: 'Lista e busca emails na caixa de entrada principal',
+      pt_keywords: [
+        'email',
+        'emails',
+        'mensagem',
+        'mensagens',
+        'caixa de entrada',
+        'inbox',
+        'listar',
+        'buscar',
+      ],
       en_keywords: ['email', 'emails', 'message', 'messages', 'inbox', 'list', 'search'],
       use_cases: [
         'Verificar emails não lidos',
         'Buscar email específico por assunto ou remetente',
         'Listar emails de uma pasta específica',
-        'Ver últimos emails recebidos'
+        'Ver últimos emails recebidos',
       ],
       typical_params: ['search', 'folder', 'limit'],
       success_indicators: ['Retorna lista de emails', 'Busca funciona corretamente'],
@@ -143,25 +160,29 @@ export class ToolIntelligenceSystem {
       performance_score: 9,
       reliability_score: 9,
       complexity_level: 'basic',
-      context_triggers: ['email do fernando', 'emails fernando', 'mensagens fernando'],
-      intent_patterns: ['quero ver', 'mostre', 'liste', 'busque', 'procure']
+      context_triggers: [
+        'email principal',
+        'emails da conta principal',
+        'mensagens da conta principal',
+      ],
+      intent_patterns: ['quero ver', 'mostre', 'liste', 'busque', 'procure'],
     });
 
     this.addIntelligence({
-      server_id: 'outlook-fernando',
+      server_id: 'email-primary',
       tool_name: 'send_email',
       category: 'Comunicação',
       subcategory: 'Email',
       action_type: 'create',
       pt_name: 'Enviar Email',
-      pt_description: 'Envia novo email pela conta do Fernando com suporte a anexos',
-      pt_keywords: ['enviar', 'mandar', 'email', 'mensagem', 'fernando', 'anexo', 'arquivo'],
+      pt_description: 'Envia novo email pela conta principal com suporte a anexos',
+      pt_keywords: ['enviar', 'mandar', 'email', 'mensagem', 'anexo', 'arquivo'],
       en_keywords: ['send', 'email', 'message', 'attachment'],
       use_cases: [
         'Enviar email para cliente',
         'Responder email importante',
         'Enviar documento por email',
-        'Comunicação oficial da empresa'
+        'Comunicação oficial da empresa',
       ],
       typical_params: ['to', 'subject', 'body', 'attachments'],
       success_indicators: ['Email enviado com sucesso'],
@@ -169,12 +190,12 @@ export class ToolIntelligenceSystem {
       performance_score: 9,
       reliability_score: 9,
       complexity_level: 'basic',
-      context_triggers: ['enviar email', 'mandar mensagem', 'email fernando'],
-      intent_patterns: ['envie', 'mande', 'enviar para', 'comunicar']
+      context_triggers: ['enviar email', 'mandar mensagem', 'email principal'],
+      intent_patterns: ['envie', 'mande', 'enviar para', 'comunicar'],
     });
 
     this.addIntelligence({
-      server_id: 'outlook-fernando',
+      server_id: 'email-primary',
       tool_name: 'reply_to_email',
       category: 'Comunicação',
       subcategory: 'Email',
@@ -186,7 +207,7 @@ export class ToolIntelligenceSystem {
       use_cases: [
         'Responder email urgente',
         'Dar retorno para cliente',
-        'Continuar conversa por email'
+        'Continuar conversa por email',
       ],
       typical_params: ['messageId', 'message', 'replyAll'],
       success_indicators: ['Resposta enviada com sucesso'],
@@ -196,12 +217,12 @@ export class ToolIntelligenceSystem {
       reliability_score: 9,
       complexity_level: 'basic',
       context_triggers: ['responder email', 'reply email', 'retornar mensagem'],
-      intent_patterns: ['responda', 'responder', 'retorne', 'reply']
+      intent_patterns: ['responda', 'responder', 'retorne', 'reply'],
     });
 
-    // Outlook Faturamento
+    // Billing email account
     this.addIntelligence({
-      server_id: 'outlook-faturamento',
+      server_id: 'email-billing',
       tool_name: 'list_emails',
       category: 'Financeiro',
       subcategory: 'Email',
@@ -213,7 +234,7 @@ export class ToolIntelligenceSystem {
       use_cases: [
         'Verificar emails de cobrança',
         'Acompanhar pagamentos',
-        'Ver comunicações financeiras'
+        'Ver comunicações financeiras',
       ],
       typical_params: ['search', 'folder', 'limit'],
       success_indicators: ['Lista emails financeiros'],
@@ -222,7 +243,7 @@ export class ToolIntelligenceSystem {
       reliability_score: 9,
       complexity_level: 'basic',
       context_triggers: ['email faturamento', 'emails cobrança', 'mensagens financeiras'],
-      intent_patterns: ['cobranças', 'pagamentos', 'boletos', 'faturas']
+      intent_patterns: ['cobranças', 'pagamentos', 'boletos', 'faturas'],
     });
 
     // === SPOTIFY TOOLS ===
@@ -239,7 +260,7 @@ export class ToolIntelligenceSystem {
       use_cases: [
         'Encontrar música específica',
         'Descobrir novas músicas',
-        'Buscar por artista ou álbum'
+        'Buscar por artista ou álbum',
       ],
       typical_params: ['query', 'limit'],
       success_indicators: ['Retorna lista de músicas'],
@@ -248,7 +269,7 @@ export class ToolIntelligenceSystem {
       reliability_score: 8,
       complexity_level: 'basic',
       context_triggers: ['buscar música', 'procurar song', 'encontrar faixa'],
-      intent_patterns: ['toque', 'coloque', 'busque', 'procure']
+      intent_patterns: ['toque', 'coloque', 'busque', 'procure'],
     });
 
     this.addIntelligence({
@@ -261,11 +282,7 @@ export class ToolIntelligenceSystem {
       pt_description: 'Reproduz música no Spotify',
       pt_keywords: ['tocar', 'reproduzir', 'play', 'música', 'som', 'spotify'],
       en_keywords: ['play', 'music', 'track', 'spotify'],
-      use_cases: [
-        'Tocar música específica',
-        'Retomar reprodução',
-        'Trocar de música'
-      ],
+      use_cases: ['Tocar música específica', 'Retomar reprodução', 'Trocar de música'],
       typical_params: ['track_uri', 'context_uri', 'device_id'],
       success_indicators: ['Música começou a tocar'],
       related_tools: ['pause_playback', 'search_tracks'],
@@ -274,7 +291,7 @@ export class ToolIntelligenceSystem {
       reliability_score: 8,
       complexity_level: 'basic',
       context_triggers: ['tocar música', 'play song', 'reproduzir'],
-      intent_patterns: ['toque', 'coloque', 'play', 'reproduza']
+      intent_patterns: ['toque', 'coloque', 'play', 'reproduza'],
     });
 
     // === TRELLO TOOLS ===
@@ -291,7 +308,7 @@ export class ToolIntelligenceSystem {
       use_cases: [
         'Ver estrutura do projeto',
         'Entender organização das tarefas',
-        'Escolher lista para adicionar card'
+        'Escolher lista para adicionar card',
       ],
       typical_params: ['boardId'],
       success_indicators: ['Mostra listas disponíveis'],
@@ -300,7 +317,7 @@ export class ToolIntelligenceSystem {
       reliability_score: 9,
       complexity_level: 'basic',
       context_triggers: ['listas trello', 'quadros projeto', 'organização tarefas'],
-      intent_patterns: ['mostre', 'liste', 'veja', 'estrutura']
+      intent_patterns: ['mostre', 'liste', 'veja', 'estrutura'],
     });
 
     this.addIntelligence({
@@ -313,11 +330,7 @@ export class ToolIntelligenceSystem {
       pt_description: 'Adiciona nova tarefa ao Trello',
       pt_keywords: ['trello', 'card', 'tarefa', 'criar', 'adicionar', 'projeto'],
       en_keywords: ['trello', 'card', 'task', 'create', 'add'],
-      use_cases: [
-        'Criar nova tarefa',
-        'Adicionar item ao projeto',
-        'Organizar trabalho'
-      ],
+      use_cases: ['Criar nova tarefa', 'Adicionar item ao projeto', 'Organizar trabalho'],
       typical_params: ['listId', 'name', 'description'],
       success_indicators: ['Card criado com sucesso'],
       related_tools: ['get_lists'],
@@ -326,7 +339,7 @@ export class ToolIntelligenceSystem {
       reliability_score: 9,
       complexity_level: 'intermediate',
       context_triggers: ['criar card', 'nova tarefa', 'adicionar projeto'],
-      intent_patterns: ['crie', 'adicione', 'faça', 'nova']
+      intent_patterns: ['crie', 'adicione', 'faça', 'nova'],
     });
 
     // === ONEDRIVE/SHAREPOINT TOOLS ===
@@ -340,11 +353,7 @@ export class ToolIntelligenceSystem {
       pt_description: 'Lista arquivos do OneDrive/SharePoint',
       pt_keywords: ['arquivos', 'files', 'documentos', 'onedrive', 'sharepoint', 'pasta'],
       en_keywords: ['files', 'documents', 'onedrive', 'sharepoint', 'folder'],
-      use_cases: [
-        'Ver arquivos disponíveis',
-        'Navegar pastas',
-        'Encontrar documento'
-      ],
+      use_cases: ['Ver arquivos disponíveis', 'Navegar pastas', 'Encontrar documento'],
       typical_params: ['path', 'limit'],
       success_indicators: ['Lista arquivos encontrados'],
       related_tools: ['download_file', 'upload_file'],
@@ -352,7 +361,7 @@ export class ToolIntelligenceSystem {
       reliability_score: 9,
       complexity_level: 'basic',
       context_triggers: ['listar arquivos', 'ver documentos', 'pasta'],
-      intent_patterns: ['mostre', 'liste', 'veja', 'arquivos']
+      intent_patterns: ['mostre', 'liste', 'veja', 'arquivos'],
     });
 
     // === NOTION TOOLS ===
@@ -364,14 +373,26 @@ export class ToolIntelligenceSystem {
       action_type: 'search',
       pt_name: 'Buscar Páginas Notion',
       pt_description: 'Busca páginas no workspace Notion',
-      pt_keywords: ['notion', 'páginas', 'pagina', 'buscar', 'documentos', 'notas', 'conhecimento', 'base', 'tópico', 'conteúdo', 'informações'],
+      pt_keywords: [
+        'notion',
+        'páginas',
+        'pagina',
+        'buscar',
+        'documentos',
+        'notas',
+        'conhecimento',
+        'base',
+        'tópico',
+        'conteúdo',
+        'informações',
+      ],
       en_keywords: ['notion', 'pages', 'search', 'documents', 'notes'],
       use_cases: [
         'Encontrar documentação',
         'Buscar notas específicas',
         'Localizar projeto',
         'Pesquisar por tópico',
-        'Consultar base de conhecimento'
+        'Consultar base de conhecimento',
       ],
       typical_params: ['query', 'page_size'],
       success_indicators: ['Páginas encontradas'],
@@ -380,7 +401,7 @@ export class ToolIntelligenceSystem {
       reliability_score: 8,
       complexity_level: 'basic',
       context_triggers: ['buscar notion', 'páginas', 'documentação'],
-      intent_patterns: ['busque', 'procure', 'encontre', 'ache', 'pesquise']
+      intent_patterns: ['busque', 'procure', 'encontre', 'ache', 'pesquise'],
     });
 
     this.addIntelligence({
@@ -391,12 +412,26 @@ export class ToolIntelligenceSystem {
       action_type: 'create',
       pt_name: 'Criar Página Notion',
       pt_description: 'Cria nova página ou documento no workspace Notion',
-      pt_keywords: ['notion', 'pagina', 'página', 'criar', 'nova página', 'documentar', 'documentação', 'notas', 'organizar', 'estruturar', 'template', 'conteúdo', 'informações'],
+      pt_keywords: [
+        'notion',
+        'pagina',
+        'página',
+        'criar',
+        'nova página',
+        'documentar',
+        'documentação',
+        'notas',
+        'organizar',
+        'estruturar',
+        'template',
+        'conteúdo',
+        'informações',
+      ],
       en_keywords: ['notion', 'create', 'page', 'document', 'notes'],
       use_cases: [
         'Criar documentação de projeto',
         'Registrar reunião ou relatório',
-        'Organizar informações em página'
+        'Organizar informações em página',
       ],
       typical_params: ['parent_id', 'title', 'content'],
       success_indicators: ['Página criada com sucesso'],
@@ -405,7 +440,7 @@ export class ToolIntelligenceSystem {
       reliability_score: 8,
       complexity_level: 'basic',
       context_triggers: ['criar página notion', 'documentar no notion', 'nova página notion'],
-      intent_patterns: ['crie', 'criar', 'documente', 'registre']
+      intent_patterns: ['crie', 'criar', 'documente', 'registre'],
     });
 
     // === WHATSAPP TOOLS ===
@@ -419,11 +454,7 @@ export class ToolIntelligenceSystem {
       pt_description: 'Envia mensagem via WhatsApp Business',
       pt_keywords: ['whatsapp', 'mensagem', 'enviar', 'sms', 'texto', 'celular'],
       en_keywords: ['whatsapp', 'message', 'send', 'sms', 'text'],
-      use_cases: [
-        'Comunicar com cliente',
-        'Enviar confirmação',
-        'Lembrete importante'
-      ],
+      use_cases: ['Comunicar com cliente', 'Enviar confirmação', 'Lembrete importante'],
       typical_params: ['to', 'message'],
       success_indicators: ['Mensagem enviada'],
       related_tools: ['send_billing_alert', 'send_document_reminder'],
@@ -431,7 +462,7 @@ export class ToolIntelligenceSystem {
       reliability_score: 8,
       complexity_level: 'basic',
       context_triggers: ['whatsapp', 'mensagem celular', 'sms'],
-      intent_patterns: ['envie whatsapp', 'mande mensagem', 'avise']
+      intent_patterns: ['envie whatsapp', 'mande mensagem', 'avise'],
     });
 
     // === IMAGE GENERATOR TOOLS ===
@@ -445,11 +476,7 @@ export class ToolIntelligenceSystem {
       pt_description: 'Cria imagem com IA usando Hugging Face',
       pt_keywords: ['imagem', 'gerar', 'criar', 'ia', 'desenho', 'foto', 'arte'],
       en_keywords: ['image', 'generate', 'create', 'ai', 'drawing', 'photo'],
-      use_cases: [
-        'Criar ilustração',
-        'Gerar arte conceitual',
-        'Produzir imagem promocional'
-      ],
+      use_cases: ['Criar ilustração', 'Gerar arte conceitual', 'Produzir imagem promocional'],
       typical_params: ['prompt', 'model', 'width', 'height'],
       success_indicators: ['Imagem gerada e salva'],
       related_tools: ['optimize_image'],
@@ -457,7 +484,7 @@ export class ToolIntelligenceSystem {
       reliability_score: 7,
       complexity_level: 'intermediate',
       context_triggers: ['gerar imagem', 'criar desenho', 'arte ia'],
-      intent_patterns: ['gere', 'crie', 'faça', 'desenhe']
+      intent_patterns: ['gere', 'crie', 'faça', 'desenhe'],
     });
 
     // === CODEX AI TOOLS ===
@@ -469,13 +496,23 @@ export class ToolIntelligenceSystem {
       action_type: 'analyze',
       pt_name: 'Conversar com Codex IA',
       pt_description: 'Conversa com assistente IA Codex para ajuda com código e desenvolvimento',
-      pt_keywords: ['codex', 'ia', 'assistente', 'conversar', 'ajuda', 'código', 'desenvolver', 'programar', 'chat'],
+      pt_keywords: [
+        'codex',
+        'ia',
+        'assistente',
+        'conversar',
+        'ajuda',
+        'código',
+        'desenvolver',
+        'programar',
+        'chat',
+      ],
       en_keywords: ['codex', 'ai', 'assistant', 'chat', 'help', 'code', 'develop', 'program'],
       use_cases: [
         'Obter ajuda com código',
         'Discutir arquitetura de software',
         'Resolver problemas de programação',
-        'Aprender novas tecnologias'
+        'Aprender novas tecnologias',
       ],
       typical_params: ['prompt', 'context'],
       success_indicators: ['Resposta útil recebida'],
@@ -484,7 +521,7 @@ export class ToolIntelligenceSystem {
       reliability_score: 9,
       complexity_level: 'basic',
       context_triggers: ['conversar codex', 'ajuda código', 'assistente ia'],
-      intent_patterns: ['ajude', 'explique', 'como faço', 'preciso']
+      intent_patterns: ['ajude', 'explique', 'como faço', 'preciso'],
     });
 
     this.addIntelligence({
@@ -495,13 +532,23 @@ export class ToolIntelligenceSystem {
       action_type: 'create',
       pt_name: 'Executar Código com IA',
       pt_description: 'Executa prompts e gera código usando IA Codex de forma não-interativa',
-      pt_keywords: ['codex', 'executar', 'gerar', 'código', 'ia', 'programar', 'criar', 'desenvolver', 'script'],
+      pt_keywords: [
+        'codex',
+        'executar',
+        'gerar',
+        'código',
+        'ia',
+        'programar',
+        'criar',
+        'desenvolver',
+        'script',
+      ],
       en_keywords: ['codex', 'execute', 'generate', 'code', 'ai', 'program', 'create', 'develop'],
       use_cases: [
         'Gerar código automaticamente',
         'Criar scripts rapidamente',
         'Implementar funcionalidades',
-        'Automatizar tarefas de código'
+        'Automatizar tarefas de código',
       ],
       typical_params: ['prompt', 'language', 'context'],
       success_indicators: ['Código gerado com sucesso'],
@@ -511,7 +558,7 @@ export class ToolIntelligenceSystem {
       reliability_score: 8,
       complexity_level: 'intermediate',
       context_triggers: ['executar codex', 'gerar código', 'criar script'],
-      intent_patterns: ['execute', 'gere', 'crie', 'implemente']
+      intent_patterns: ['execute', 'gere', 'crie', 'implemente'],
     });
 
     this.addIntelligence({
@@ -528,7 +575,7 @@ export class ToolIntelligenceSystem {
         'Aplicar sugestões de código',
         'Implementar correções automáticas',
         'Atualizar código existente',
-        'Aplicar patches gerados'
+        'Aplicar patches gerados',
       ],
       typical_params: ['diff', 'target_files'],
       success_indicators: ['Mudanças aplicadas com sucesso'],
@@ -538,7 +585,7 @@ export class ToolIntelligenceSystem {
       reliability_score: 8,
       complexity_level: 'intermediate',
       context_triggers: ['aplicar codex', 'aplicar mudanças', 'atualizar código'],
-      intent_patterns: ['aplique', 'atualize', 'modifique', 'implemente']
+      intent_patterns: ['aplique', 'atualize', 'modifique', 'implemente'],
     });
 
     this.addIntelligence({
@@ -555,7 +602,7 @@ export class ToolIntelligenceSystem {
         'Continuar trabalho anterior',
         'Revisar sessão passada',
         'Retomar contexto perdido',
-        'Ver histórico de interações'
+        'Ver histórico de interações',
       ],
       typical_params: ['session_id', 'recent'],
       success_indicators: ['Sessão restaurada'],
@@ -564,10 +611,12 @@ export class ToolIntelligenceSystem {
       reliability_score: 9,
       complexity_level: 'basic',
       context_triggers: ['resumir codex', 'continuar sessão', 'retomar trabalho'],
-      intent_patterns: ['resume', 'continue', 'retome', 'volte']
+      intent_patterns: ['resume', 'continue', 'retome', 'volte'],
     });
 
-    console.log(`✅ Sistema de Inteligência inicializado com ${this.intelligence.size} ferramentas`);
+    console.log(
+      `✅ Sistema de Inteligência inicializado com ${this.intelligence.size} ferramentas`
+    );
   }
 
   private static addIntelligence(intel: ToolIntelligence): void {
@@ -585,114 +634,220 @@ export class ToolIntelligenceSystem {
     const results: ToolIntelligence[] = [];
 
     const actionIntentMap: Record<ToolIntelligence['action_type'], string[]> = {
-      create: ['criar', 'enviar', 'adicionar', 'fazer', 'gerar', 'responder', 'mandar', 'documentar'],
+      create: [
+        'criar',
+        'enviar',
+        'adicionar',
+        'fazer',
+        'gerar',
+        'responder',
+        'mandar',
+        'documentar',
+      ],
       read: ['listar', 'ver', 'mostrar', 'buscar', 'procurar'],
       update: ['atualizar', 'editar', 'responder', 'marcar', 'retornar'],
       delete: ['apagar', 'deletar', 'excluir', 'remover'],
       search: ['buscar', 'procurar', 'encontrar', 'pesquisar'],
       control: ['tocar', 'reproduzir', 'pausar', 'continuar', 'aumentar', 'colocar'],
-      analyze: ['analisar', 'explicar', 'ajudar']
+      analyze: ['analisar', 'explicar', 'ajudar'],
     };
 
     const categoryTokenMap: Record<string, string[]> = {
-      'Comunicação': ['email', 'emails', 'mensagem', 'mensagens', 'whatsapp', 'mail'],
-      'Entretenimento': ['musica', 'spotify', 'playlist', 'faixa', 'track'],
-      'Produtividade': ['trello', 'tarefa', 'tarefas', 'projeto', 'card', 'board'],
-      'Arquivos': ['arquivo', 'arquivos', 'documento', 'documentos', 'pasta', 'sharepoint', 'onedrive'],
-      'Conhecimento': ['notion', 'pagina', 'paginas', 'documentacao', 'notas', 'conhecimento', 'base'],
-      'Criação': ['imagem', 'arte', 'foto']
+      Comunicação: ['email', 'emails', 'mensagem', 'mensagens', 'whatsapp', 'mail'],
+      Entretenimento: ['musica', 'spotify', 'playlist', 'faixa', 'track'],
+      Produtividade: ['trello', 'tarefa', 'tarefas', 'projeto', 'card', 'board'],
+      Arquivos: [
+        'arquivo',
+        'arquivos',
+        'documento',
+        'documentos',
+        'pasta',
+        'sharepoint',
+        'onedrive',
+      ],
+      Conhecimento: [
+        'notion',
+        'pagina',
+        'paginas',
+        'documentacao',
+        'notas',
+        'conhecimento',
+        'base',
+      ],
+      Criação: ['imagem', 'arte', 'foto'],
     };
 
     const domainRules = [
       {
         tokens: ['email', 'emails', 'mensagem', 'mensagens', 'inbox', 'caixa', 'mail'],
-        matches: (intel: ToolIntelligence) => intel.server_id.includes('outlook') || intel.subcategory === 'Email',
+        matches: (intel: ToolIntelligence) =>
+          intel.server_id.includes('outlook') || intel.subcategory === 'Email',
         boost: 100,
-        penalty: -30
+        penalty: -30,
       },
       {
         tokens: ['whatsapp', 'zap', 'wpp'],
-        matches: (intel: ToolIntelligence) => intel.server_id === 'whatsapp' || intel.subcategory === 'Mensagens',
+        matches: (intel: ToolIntelligence) =>
+          intel.server_id === 'whatsapp' || intel.subcategory === 'Mensagens',
         boost: 110,
-        penalty: -35
+        penalty: -35,
       },
       {
         tokens: ['musica', 'spotify', 'playlist', 'faixa', 'track', 'song'],
-        matches: (intel: ToolIntelligence) => intel.server_id === 'spotify' || intel.subcategory === 'Música',
+        matches: (intel: ToolIntelligence) =>
+          intel.server_id === 'spotify' || intel.subcategory === 'Música',
         boost: 90,
-        penalty: -25
+        penalty: -25,
       },
       {
         tokens: ['trello', 'tarefa', 'tarefas', 'projeto', 'card', 'board'],
-        matches: (intel: ToolIntelligence) => intel.server_id === 'trello' || intel.category === 'Produtividade',
+        matches: (intel: ToolIntelligence) =>
+          intel.server_id === 'trello' || intel.category === 'Produtividade',
         boost: 85,
-        penalty: -20
+        penalty: -20,
       },
       {
-        tokens: ['arquivo', 'arquivos', 'documento', 'documentos', 'pasta', 'sharepoint', 'onedrive'],
-        matches: (intel: ToolIntelligence) => intel.server_id.includes('onedrive') || intel.category === 'Arquivos',
+        tokens: [
+          'arquivo',
+          'arquivos',
+          'documento',
+          'documentos',
+          'pasta',
+          'sharepoint',
+          'onedrive',
+        ],
+        matches: (intel: ToolIntelligence) =>
+          intel.server_id.includes('onedrive') || intel.category === 'Arquivos',
         boost: 90,
-        penalty: -25
+        penalty: -25,
       },
       {
-        tokens: ['notion', 'pagina', 'paginas', 'documentacao', 'notas', 'conteudo', 'informacoes', 'conhecimento', 'base', 'topico'],
-        matches: (intel: ToolIntelligence) => intel.server_id === 'notion' || intel.category === 'Conhecimento',
+        tokens: [
+          'notion',
+          'pagina',
+          'paginas',
+          'documentacao',
+          'notas',
+          'conteudo',
+          'informacoes',
+          'conhecimento',
+          'base',
+          'topico',
+        ],
+        matches: (intel: ToolIntelligence) =>
+          intel.server_id === 'notion' || intel.category === 'Conhecimento',
         boost: 95,
-        penalty: -25
-      }
+        penalty: -25,
+      },
     ];
 
     for (const intel of this.intelligence.values()) {
       let score = 0;
-      const toolTokens = Array.from(new Set([
-        ...this.tokenize(intel.pt_name),
-        ...this.tokenize(intel.pt_description),
-        ...intel.pt_keywords.flatMap(keyword => this.tokenize(keyword)),
-        ...intel.en_keywords.flatMap(keyword => this.tokenize(keyword)),
-        ...intel.use_cases.flatMap(useCase => this.tokenize(useCase)),
-        ...intel.context_triggers.flatMap(trigger => this.tokenize(trigger)),
-        ...intel.intent_patterns.flatMap(pattern => this.tokenize(pattern)),
-        ...this.tokenize(intel.tool_name),
-        ...this.tokenize(intel.category),
-        ...this.tokenize(intel.subcategory),
-        ...this.tokenize(intel.server_id)
-      ]));
+      const toolTokens = Array.from(
+        new Set([
+          ...this.tokenize(intel.pt_name),
+          ...this.tokenize(intel.pt_description),
+          ...intel.pt_keywords.flatMap((keyword) => this.tokenize(keyword)),
+          ...intel.en_keywords.flatMap((keyword) => this.tokenize(keyword)),
+          ...intel.use_cases.flatMap((useCase) => this.tokenize(useCase)),
+          ...intel.context_triggers.flatMap((trigger) => this.tokenize(trigger)),
+          ...intel.intent_patterns.flatMap((pattern) => this.tokenize(pattern)),
+          ...this.tokenize(intel.tool_name),
+          ...this.tokenize(intel.category),
+          ...this.tokenize(intel.subcategory),
+          ...this.tokenize(intel.server_id),
+        ])
+      );
 
       const normalizedPtName = this.normalizeText(intel.pt_name);
       const normalizedDescription = this.normalizeText(intel.pt_description);
 
       if (normalizedPtName === normalizedQuery) score += 100;
-      if (normalizedDescription.includes(normalizedQuery) || normalizedQuery.includes(normalizedDescription)) score += 40;
+      if (
+        normalizedDescription.includes(normalizedQuery) ||
+        normalizedQuery.includes(normalizedDescription)
+      )
+        score += 40;
       if (this.normalizeText(intel.tool_name).includes(normalizedQuery)) score += 25;
 
       score += this.scoreTokenMatches(queryTokens, toolTokens, 24, 11);
 
-      if (intel.intent_patterns.some(pattern => normalizedQuery.includes(this.normalizeText(pattern)))) score += 70;
-      if (intel.context_triggers.some(trigger => normalizedQuery.includes(this.normalizeText(trigger)))) score += 60;
-      if (intel.use_cases.some(useCase => this.normalizeText(useCase).includes(normalizedQuery))) score += 40;
+      if (
+        intel.intent_patterns.some((pattern) =>
+          normalizedQuery.includes(this.normalizeText(pattern))
+        )
+      )
+        score += 70;
+      if (
+        intel.context_triggers.some((trigger) =>
+          normalizedQuery.includes(this.normalizeText(trigger))
+        )
+      )
+        score += 60;
+      if (intel.use_cases.some((useCase) => this.normalizeText(useCase).includes(normalizedQuery)))
+        score += 40;
 
-      if (actionIntentMap[intel.action_type].some(action => queryTokens.includes(this.normalizeText(action)))) {
+      if (
+        actionIntentMap[intel.action_type].some((action) =>
+          queryTokens.includes(this.normalizeText(action))
+        )
+      ) {
         score += 35;
       }
 
-      if ((categoryTokenMap[intel.category] || []).some(token => queryTokens.includes(token))) {
+      if ((categoryTokenMap[intel.category] || []).some((token) => queryTokens.includes(token))) {
         score += 30;
       }
 
       for (const rule of domainRules) {
-        if (rule.tokens.some(token => queryTokens.includes(token))) {
+        if (rule.tokens.some((token) => queryTokens.includes(token))) {
           score += rule.matches(intel) ? rule.boost : rule.penalty;
         }
       }
 
-      const wantsSearch = ['buscar', 'procurar', 'encontrar', 'listar', 'ver', 'mostrar', 'pesquisar'].some(token => queryTokens.includes(token));
-      const wantsCreate = ['criar', 'enviar', 'adicionar', 'fazer', 'mandar', 'documentar'].some(token => queryTokens.includes(token));
-      const isEmailQuery = ['email', 'emails', 'mensagem', 'mensagens', 'mail'].some(token => queryTokens.includes(token));
-      const isProjectQuery = ['trello', 'tarefa', 'tarefas', 'projeto', 'card', 'board'].some(token => queryTokens.includes(token));
-      const isFileQuery = ['arquivo', 'arquivos', 'documento', 'documentos', 'pasta', 'sharepoint', 'onedrive'].some(token => queryTokens.includes(token));
-      const isKnowledgeQuery = ['notion', 'pagina', 'paginas', 'documentacao', 'notas', 'conhecimento', 'base', 'topico'].some(token => queryTokens.includes(token));
+      const wantsSearch = [
+        'buscar',
+        'procurar',
+        'encontrar',
+        'listar',
+        'ver',
+        'mostrar',
+        'pesquisar',
+      ].some((token) => queryTokens.includes(token));
+      const wantsCreate = ['criar', 'enviar', 'adicionar', 'fazer', 'mandar', 'documentar'].some(
+        (token) => queryTokens.includes(token)
+      );
+      const isEmailQuery = ['email', 'emails', 'mensagem', 'mensagens', 'mail'].some((token) =>
+        queryTokens.includes(token)
+      );
+      const isProjectQuery = ['trello', 'tarefa', 'tarefas', 'projeto', 'card', 'board'].some(
+        (token) => queryTokens.includes(token)
+      );
+      const isFileQuery = [
+        'arquivo',
+        'arquivos',
+        'documento',
+        'documentos',
+        'pasta',
+        'sharepoint',
+        'onedrive',
+      ].some((token) => queryTokens.includes(token));
+      const isKnowledgeQuery = [
+        'notion',
+        'pagina',
+        'paginas',
+        'documentacao',
+        'notas',
+        'conhecimento',
+        'base',
+        'topico',
+      ].some((token) => queryTokens.includes(token));
 
-      if (isEmailQuery && wantsSearch && (intel.server_id.includes('outlook') || intel.subcategory === 'Email')) {
+      if (
+        isEmailQuery &&
+        wantsSearch &&
+        (intel.server_id.includes('outlook') || intel.subcategory === 'Email')
+      ) {
         score += intel.tool_name === 'list_emails' ? 110 : 45;
       }
       if (isEmailQuery && wantsCreate && intel.tool_name === 'send_email') {
@@ -725,7 +880,10 @@ export class ToolIntelligenceSystem {
         const normalizedSubcategory = this.normalizeText(intel.subcategory);
         if (normalizedCategory.includes(normalizedContext)) score += 25;
         if (normalizedSubcategory.includes(normalizedContext)) score += 15;
-        if (normalizedContext === 'trabalho' && ['Comunicação', 'Produtividade', 'Conhecimento', 'Arquivos'].includes(intel.category)) {
+        if (
+          normalizedContext === 'trabalho' &&
+          ['Comunicação', 'Produtividade', 'Conhecimento', 'Arquivos'].includes(intel.category)
+        ) {
           score += 20;
         }
       }
@@ -768,7 +926,10 @@ export class ToolIntelligenceSystem {
   // Encontra ferramenta por nome (busca fuzzy)
   private static findToolByName(toolName: string): ToolIntelligence | null {
     for (const intel of this.intelligence.values()) {
-      if (intel.tool_name === toolName || intel.pt_name.toLowerCase().includes(toolName.toLowerCase())) {
+      if (
+        intel.tool_name === toolName ||
+        intel.pt_name.toLowerCase().includes(toolName.toLowerCase())
+      ) {
         return intel;
       }
     }
@@ -784,26 +945,58 @@ export class ToolIntelligenceSystem {
   } {
     const normalizedQuery = this.normalizeText(query);
     const queryTokens = this.tokenize(query);
-    
+
     const actionPatterns: Array<{ action: string; patterns: string[] }> = [
       { action: 'enviar', patterns: ['enviar', 'mandar', 'disparar', 'transmitir'] },
-      { action: 'buscar', patterns: ['buscar', 'procurar', 'encontrar', 'localizar', 'achar', 'pesquisar'] },
+      {
+        action: 'buscar',
+        patterns: ['buscar', 'procurar', 'encontrar', 'localizar', 'achar', 'pesquisar'],
+      },
       { action: 'listar', patterns: ['listar', 'mostrar', 'exibir', 'ver', 'visualizar'] },
       { action: 'tocar', patterns: ['tocar'] },
       { action: 'reproduzir', patterns: ['reproduzir'] },
       { action: 'colocar', patterns: ['colocar'] },
-      { action: 'criar', patterns: ['criar', 'fazer', 'gerar', 'produzir', 'adicionar', 'documentar', 'registrar'] },
-      { action: 'deletar', patterns: ['deletar', 'apagar', 'remover', 'excluir'] }
+      {
+        action: 'criar',
+        patterns: ['criar', 'fazer', 'gerar', 'produzir', 'adicionar', 'documentar', 'registrar'],
+      },
+      { action: 'deletar', patterns: ['deletar', 'apagar', 'remover', 'excluir'] },
     ];
 
     const targetPatterns: Array<{ target: string; patterns: string[] }> = [
-      { target: 'email', patterns: ['email', 'emails', 'mensagem', 'mensagens', 'correio', 'e-mail'] },
-      { target: 'música', patterns: ['música', 'musica', 'som', 'track', 'faixa', 'spotify', 'playlist'] },
-      { target: 'arquivo', patterns: ['arquivo', 'arquivos', 'documento', 'documentos', 'file', 'files', 'pdf', 'doc', 'sharepoint', 'onedrive'] },
-      { target: 'projeto', patterns: ['projeto', 'trello', 'card', 'tarefa', 'tarefas', 'task', 'board'] },
+      {
+        target: 'email',
+        patterns: ['email', 'emails', 'mensagem', 'mensagens', 'correio', 'e-mail'],
+      },
+      {
+        target: 'música',
+        patterns: ['música', 'musica', 'som', 'track', 'faixa', 'spotify', 'playlist'],
+      },
+      {
+        target: 'arquivo',
+        patterns: [
+          'arquivo',
+          'arquivos',
+          'documento',
+          'documentos',
+          'file',
+          'files',
+          'pdf',
+          'doc',
+          'sharepoint',
+          'onedrive',
+        ],
+      },
+      {
+        target: 'projeto',
+        patterns: ['projeto', 'trello', 'card', 'tarefa', 'tarefas', 'task', 'board'],
+      },
       { target: 'whatsapp', patterns: ['whatsapp', 'wpp', 'zap'] },
-      { target: 'notion', patterns: ['notion', 'pagina', 'paginas', 'documentacao', 'notas', 'conhecimento'] },
-      { target: 'imagem', patterns: ['imagem', 'foto', 'desenho', 'arte', 'picture'] }
+      {
+        target: 'notion',
+        patterns: ['notion', 'pagina', 'paginas', 'documentacao', 'notas', 'conhecimento'],
+      },
+      { target: 'imagem', patterns: ['imagem', 'foto', 'desenho', 'arte', 'picture'] },
     ];
 
     let detectedAction = 'unknown';
@@ -811,8 +1004,10 @@ export class ToolIntelligenceSystem {
     let confidence = 0;
 
     for (const entry of actionPatterns) {
-      const matchedPattern = entry.patterns.find(pattern => 
-        queryTokens.includes(this.normalizeText(pattern)) || normalizedQuery.includes(this.normalizeText(pattern))
+      const matchedPattern = entry.patterns.find(
+        (pattern) =>
+          queryTokens.includes(this.normalizeText(pattern)) ||
+          normalizedQuery.includes(this.normalizeText(pattern))
       );
 
       if (matchedPattern) {
@@ -823,8 +1018,10 @@ export class ToolIntelligenceSystem {
     }
 
     for (const entry of targetPatterns) {
-      const matchedPattern = entry.patterns.find(pattern => 
-        queryTokens.includes(this.normalizeText(pattern)) || normalizedQuery.includes(this.normalizeText(pattern))
+      const matchedPattern = entry.patterns.find(
+        (pattern) =>
+          queryTokens.includes(this.normalizeText(pattern)) ||
+          normalizedQuery.includes(this.normalizeText(pattern))
       );
 
       if (matchedPattern) {
@@ -843,7 +1040,7 @@ export class ToolIntelligenceSystem {
       action: detectedAction,
       target: detectedTarget,
       confidence: Math.min(confidence, 0.99),
-      suggestions
+      suggestions,
     };
   }
 
@@ -859,7 +1056,7 @@ export class ToolIntelligenceSystem {
   // Obtém ferramentas por categoria
   static getToolsByCategory(category: string): ToolIntelligence[] {
     return Array.from(this.intelligence.values())
-      .filter(intel => intel.category === category)
+      .filter((intel) => intel.category === category)
       .sort((a, b) => b.reliability_score - a.reliability_score);
   }
 
@@ -871,15 +1068,15 @@ export class ToolIntelligenceSystem {
     avgReliability: number;
   } {
     const tools = Array.from(this.intelligence.values());
-    const categories = new Set(tools.map(t => t.category));
-    const servers = new Set(tools.map(t => t.server_id));
+    const categories = new Set(tools.map((t) => t.category));
+    const servers = new Set(tools.map((t) => t.server_id));
     const avgReliability = tools.reduce((sum, t) => sum + t.reliability_score, 0) / tools.length;
 
     return {
       totalTools: tools.length,
       categories: categories.size,
       servers: servers.size,
-      avgReliability: Math.round(avgReliability * 10) / 10
+      avgReliability: Math.round(avgReliability * 10) / 10,
     };
   }
 }

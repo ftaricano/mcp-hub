@@ -1,50 +1,54 @@
 # MCP Hub
 
-Status: experimental
+[![CI](https://github.com/ftaricano/mcp-hub/actions/workflows/test.yml/badge.svg)](https://github.com/ftaricano/mcp-hub/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
+[![MCP](https://img.shields.io/badge/MCP-compatible-8A2BE2.svg)](https://modelcontextprotocol.io)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6.svg)](https://www.typescriptlang.org)
 
-MCP Hub is a generic aggregation layer for Model Context Protocol servers. It does not ship with built-in downstream MCPs. Instead, you register any MCP servers you already run and expose them through one shared hub for discovery, routing, and recommendations.
+MCP Hub is a TypeScript gateway for Model Context Protocol servers. It lets you register multiple downstream MCP servers and expose one hub surface for tool discovery, routing, smart search, and recommendations.
 
-## What this repo is
+Status: experimental. The project is suitable for local development and portfolio review, but the public API should be treated as pre-1.0.
 
-Use MCP Hub when you want one MCP entry point in front of many independent MCP servers.
+## What It Does
 
-The hub can:
-- aggregate tool metadata across registered MCP servers,
-- route tool calls to the correct downstream server,
-- search the combined tool catalog with natural-language queries,
-- return recommendation-style results based on the available tool metadata.
+- Aggregates tool metadata across registered MCP servers.
+- Routes tool calls to the selected downstream server.
+- Provides hub-native tools for catalog browsing, delegated calls, natural-language search, and recommendations.
+- Supports stdio and HTTP/SSE downstream server entries.
+- Keeps downstream credentials outside the repository through environment variables or per-server env files.
+- Includes unit, integration, e2e, performance, and registry hardening tests.
 
-The repository also includes caching, retries, typed configuration, and unit/integration/e2e/performance test coverage.
+MCP Hub does not bundle third-party MCP servers. All server examples are placeholders that you replace with your own commands, URLs, and credential storage.
 
-## What this repo is not
+## Requirements
 
-- It is not a bundle of preinstalled MCP integrations.
-- It is not coupled to any single vendor, app, or workflow.
-- Example server IDs in this repo are placeholders or test fixtures, not embedded product dependencies.
+- Node.js 18 or newer
+- npm 10 or newer
+- One or more MCP servers that you can run locally or reach over HTTP/SSE
 
-## Quickstart
-
-Prerequisites:
-- Node.js 18+
-- One or more MCP servers you can run locally or reach over HTTP/SSE
-
-1. Install dependencies
+## Install
 
 ```bash
 git clone https://github.com/ftaricano/mcp-hub.git
 cd mcp-hub
-npm install
+npm ci
+npm run build
 ```
 
-2. Create a local hub config
+When an npm package is published, the intended package name is `@ftaricano/mcp-hub`.
+
+## Quickstart
+
+Create a local hub config:
 
 ```bash
 cp hub-config.example.json hub-config.json
 ```
 
-Edit `hub-config.json` so each entry points to real MCP servers in your environment.
+Edit `hub-config.json` so each server entry points to a real MCP server in your environment. Keep `hub-config.json` local; it is ignored by Git because it may contain paths or environment references that are specific to your machine.
 
-Minimal example:
+Minimal stdio server example:
 
 ```json
 {
@@ -53,11 +57,8 @@ Minimal example:
       "id": "docs-server",
       "name": "Documentation MCP Server",
       "command": "node",
-      "args": ["/absolute/path/to/your-docs-mcp/dist/index.js"],
-      "env": {
-        "DOCS_API_KEY": "replace_with_real_secret_if_needed"
-      },
-      "envFile": "/absolute/path/to/your-docs-mcp/.env",
+      "args": ["/absolute/path/to/docs-mcp/dist/index.js"],
+      "envFile": "/absolute/path/to/docs-mcp/.env",
       "inheritEnv": ["DOCS_REGION"],
       "protocol": "stdio",
       "enabled": true,
@@ -86,13 +87,15 @@ Minimal example:
 }
 ```
 
-3. Build the hub
+Run the hub:
 
 ```bash
-npm run build
+HUB_CONFIG="$PWD/hub-config.json" npm start
 ```
 
-4. Register the hub in your MCP client
+## MCP Client Config
+
+Register the built hub in any MCP client that supports stdio servers:
 
 ```json
 {
@@ -108,50 +111,122 @@ npm run build
 }
 ```
 
-## Hub-native interface
+See [LMStudio-MCP-Config.md](LMStudio-MCP-Config.md) for an LM Studio example.
 
-MCP Hub adds four hub-native commands on top of the downstream servers you register:
-- `list-all-tools` to browse the aggregated catalog,
-- `call-tool` to execute a specific tool on a specific downstream server,
-- `smart-search` to rank tools for a natural-language query,
-- `get-recommendations` to return recommendation-oriented results.
+## Hub Tools
 
-## MCPorter pilot
+MCP Hub exposes four hub-native tools:
 
-This repo also carries a local MCPorter pilot for the Ferd tools workspace. MCPorter is used beside MCP Hub for CLI-friendly inventory, smoke checks, and generated TypeScript surfaces; it does not replace the existing hand-written domain CLIs.
+- `list-all-tools`: returns the aggregated downstream tool catalog.
+- `call-tool`: calls a named tool on a named downstream server.
+- `smart-search`: ranks available tools for a natural-language query.
+- `get-recommendations`: returns recommendation-oriented results based on available tool metadata.
 
-```bash
-npm run mcporter:list
-npm run mcporter:smoke
+## Configuration
+
+`HUB_CONFIG` can point to any JSON file matching the hub config shape. If it is not set, the hub tries common local paths for `hub-config.json`.
+
+Server entries can use:
+
+- `command` and `args` for stdio MCP servers,
+- `url` and `protocol: "http"` for HTTP/SSE entries,
+- `env` for non-secret static values,
+- `envFile` for per-server secrets or local credentials,
+- `inheritEnv` for explicit parent environment pass-through,
+- `toolCallRetries` for known-idempotent tools only.
+
+Downstream stdio servers inherit only a small runtime-safe environment baseline by default. Add any required parent variables explicitly with `inheritEnv`.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  Client["MCP client"] --> Hub["MCP Hub"]
+  Hub --> Registry["Server registry"]
+  Hub --> Search["Smart search and recommendations"]
+  Registry --> ServerA["Docs MCP server"]
+  Registry --> ServerB["Issue tracker MCP server"]
+  Registry --> ServerC["Any other MCP server"]
 ```
 
-See `docs/mcporter.md` for the policy, active pilot servers, and backlog of local MCPs to promote after auth/build checks.
+Key modules:
 
-## Configuration notes
-
-- `HUB_CONFIG` can point to any JSON file matching the hub config shape.
-- If `HUB_CONFIG` is not set, the hub also attempts to discover `hub-config.json` in common local paths.
-- Registered servers can use `stdio` or `http` entries.
-- Downstream stdio servers only inherit a small runtime-safe environment baseline (`PATH`, temp/home/shell locale essentials). Use `inheritEnv` to pass through additional parent variables explicitly, and `env`/`envFile` for server-specific credentials.
-- Tool calls do not retry by default. To opt in safely for known-idempotent tools, use `toolCallRetries.retryableTools` with an explicit `maxAttempts`.
-- The hub only exposes what you configure; no downstream MCP is bundled automatically.
-
-## Typical use cases
-
-- keep client configuration centered on one hub instead of many separate server entries,
-- expose a smaller operational surface when downstream servers publish many tools,
-- search for the right server/tool combination before making a call,
-- compose internal, local, or third-party MCP servers behind one MCP endpoint.
+- `src/index.ts`: MCP server entry point and hub-native tool handlers.
+- `src/registry/`: downstream server lifecycle, connections, and tool discovery.
+- `src/intelligence/`: search and recommendation scoring.
+- `src/cache/`: result and metadata caching.
+- `src/utils/redaction.ts`: argument summarization without logging raw sensitive values.
 
 ## Development
 
 ```bash
-npm run build
-npm run lint
 npm run type-check
+npm run lint
+npm run format:check
 npm test
+npm run build
 ```
+
+Useful focused suites:
+
+```bash
+npm run test:unit
+npm run test:integration
+npm run test:e2e
+npm run test:performance
+```
+
+## Packaging
+
+Validate the npm package contents before publishing:
+
+```bash
+npm pack --dry-run --json
+```
+
+The package is intentionally restricted with the `files` field in `package.json`; local configs, logs, tests, coverage, `testing-interface/`, and generated artifacts should not ship in the npm tarball.
+
+## Security
+
+Do not commit secrets or local operational state. In particular, keep these files and directories out of Git:
+
+- `.env`, `.env.*` except `.env.example`
+- `hub-config.json` and machine-specific config variants
+- `tokens/`, `auth-state/`, `config/auth-state/`
+- `credentials.json`, `token.json`, private keys, certificates, logs, and JSONL traces
+
+Report vulnerabilities privately through [GitHub Security Advisories](https://github.com/ftaricano/mcp-hub/security/advisories/new). See [SECURITY.md](SECURITY.md) for the full policy.
+
+## Troubleshooting
+
+If the hub starts but downstream tools do not appear:
+
+- confirm `HUB_CONFIG` points to the intended file,
+- verify each downstream server `command`, `args`, `url`, and `protocol`,
+- run the downstream MCP server directly before registering it behind the hub,
+- check whether the server requires variables in `envFile` or `inheritEnv`,
+- keep mutating tool calls out of retry lists unless they are explicitly idempotent.
+
+If build or tests fail after dependency changes:
+
+- run `npm ci` from a clean checkout,
+- run `npm run type-check` before debugging runtime behavior,
+- remove stale `dist/` output with `npm run clean && npm run build`.
+
+## Contributing
+
+Issues and focused pull requests are welcome. Before opening a PR, run:
+
+```bash
+npm run type-check
+npm run lint
+npm run format:check
+npm test
+npm run build
+```
+
+Please avoid committing local credentials, generated logs, screenshots, or machine-specific hub configs.
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).

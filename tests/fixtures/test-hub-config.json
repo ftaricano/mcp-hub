@@ -11,27 +11,27 @@
       "timeout": 5000,
       "retries": 3
     },
-    "outlook-fernando": {
-      "command": "echo", 
+    "email-primary": {
+      "command": "echo",
       "args": ["mock-outlook-server"],
       "env": {
         "MICROSOFT_GRAPH_CLIENT_ID": "test_id",
         "MICROSOFT_GRAPH_CLIENT_SECRET": "test_secret",
         "MICROSOFT_GRAPH_TENANT_ID": "test_tenant",
-        "TARGET_USER_EMAIL": "fernando@test.com"
+        "TARGET_USER_EMAIL": "user@example.com"
       },
       "enabled": true,
       "timeout": 5000,
       "retries": 3
     },
-    "outlook-faturamento": {
+    "email-billing": {
       "command": "echo",
       "args": ["mock-billing-server"],
       "env": {
         "MICROSOFT_GRAPH_CLIENT_ID": "test_id",
-        "MICROSOFT_GRAPH_CLIENT_SECRET": "test_secret", 
+        "MICROSOFT_GRAPH_CLIENT_SECRET": "test_secret",
         "MICROSOFT_GRAPH_TENANT_ID": "test_tenant",
-        "TARGET_USER_EMAIL": "billing@test.com"
+        "TARGET_USER_EMAIL": "billing@example.com"
       },
       "enabled": true,
       "timeout": 5000,

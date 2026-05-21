@@ -20,19 +20,20 @@ export function createToolRoutes(hubClient: HubClient): Router {
       // Apply filters
       if (search) {
         const searchLower = String(search).toLowerCase();
-        tools = tools.filter(tool =>
-          tool.toolName.toLowerCase().includes(searchLower) ||
-          tool.description.toLowerCase().includes(searchLower) ||
-          tool.ptName?.toLowerCase().includes(searchLower)
+        tools = tools.filter(
+          (tool) =>
+            tool.toolName.toLowerCase().includes(searchLower) ||
+            tool.description.toLowerCase().includes(searchLower) ||
+            tool.ptName?.toLowerCase().includes(searchLower)
         );
       }
 
       if (category) {
-        tools = tools.filter(tool => tool.category === category);
+        tools = tools.filter((tool) => tool.category === category);
       }
 
       if (server) {
-        tools = tools.filter(tool => tool.serverId === server);
+        tools = tools.filter((tool) => tool.serverId === server);
       }
 
       const response: ApiResponse = {
@@ -40,9 +41,9 @@ export function createToolRoutes(hubClient: HubClient): Router {
         data: {
           tools,
           total: tools.length,
-          hasMore: false
+          hasMore: false,
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       res.json(response);
@@ -51,9 +52,9 @@ export function createToolRoutes(hubClient: HubClient): Router {
         success: false,
         error: {
           code: 'TOOLS_DISCOVERY_ERROR',
-          message: error.message || 'Failed to discover tools'
+          message: error.message || 'Failed to discover tools',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
       res.status(500).json(response);
     }
@@ -67,16 +68,16 @@ export function createToolRoutes(hubClient: HubClient): Router {
     try {
       const { serverId, toolName } = req.params;
       const tools = await hubClient.getToolsForServer(serverId);
-      const tool = tools.find(t => t.toolName === toolName);
+      const tool = tools.find((t) => t.toolName === toolName);
 
       if (!tool) {
         const response: ApiResponse = {
           success: false,
           error: {
             code: 'TOOL_NOT_FOUND',
-            message: `Tool ${toolName} not found on server ${serverId}`
+            message: `Tool ${toolName} not found on server ${serverId}`,
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
         return res.status(404).json(response);
       }
@@ -84,7 +85,7 @@ export function createToolRoutes(hubClient: HubClient): Router {
       const response: ApiResponse = {
         success: true,
         data: tool,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       res.json(response);
@@ -93,9 +94,9 @@ export function createToolRoutes(hubClient: HubClient): Router {
         success: false,
         error: {
           code: 'TOOL_INFO_ERROR',
-          message: error.message || 'Failed to get tool information'
+          message: error.message || 'Failed to get tool information',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
       res.status(500).json(response);
     }

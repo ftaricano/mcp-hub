@@ -16,9 +16,9 @@ export function ToolTester({ tool, onBack }: ToolTesterProps) {
   const parameterNames = Object.keys(schema);
 
   const handleParameterChange = (name: string, value: any) => {
-    setParameters(prev => ({
+    setParameters((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -27,11 +27,7 @@ export function ToolTester({ tool, onBack }: ToolTesterProps) {
       setExecuting(true);
       setResult(null);
 
-      const executionResult = await api.executeTool(
-        tool.serverId,
-        tool.toolName,
-        parameters
-      );
+      const executionResult = await api.executeTool(tool.serverId, tool.toolName, parameters);
 
       setResult(executionResult);
     } catch (error: any) {
@@ -46,8 +42,8 @@ export function ToolTester({ tool, onBack }: ToolTesterProps) {
         status: 'error',
         error: {
           code: 'EXECUTION_FAILED',
-          message: error.message || 'Failed to execute tool'
-        }
+          message: error.message || 'Failed to execute tool',
+        },
       });
     } finally {
       setExecuting(false);
@@ -65,7 +61,7 @@ export function ToolTester({ tool, onBack }: ToolTesterProps) {
           <input
             type="number"
             value={value}
-            onChange={e => handleParameterChange(name, parseFloat(e.target.value))}
+            onChange={(e) => handleParameterChange(name, parseFloat(e.target.value))}
             className="param-input"
           />
         );
@@ -76,7 +72,7 @@ export function ToolTester({ tool, onBack }: ToolTesterProps) {
             <input
               type="checkbox"
               checked={!!value}
-              onChange={e => handleParameterChange(name, e.target.checked)}
+              onChange={(e) => handleParameterChange(name, e.target.checked)}
             />
             <span>{value ? 'Sim' : 'Não'}</span>
           </label>
@@ -86,11 +82,8 @@ export function ToolTester({ tool, onBack }: ToolTesterProps) {
         return (
           <textarea
             value={Array.isArray(value) ? value.join('\n') : value}
-            onChange={e =>
-              handleParameterChange(
-                name,
-                e.target.value.split('\n').filter(Boolean)
-              )
+            onChange={(e) =>
+              handleParameterChange(name, e.target.value.split('\n').filter(Boolean))
             }
             placeholder="Um item por linha..."
             className="param-textarea"
@@ -102,7 +95,7 @@ export function ToolTester({ tool, onBack }: ToolTesterProps) {
         return (
           <textarea
             value={typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
-            onChange={e => {
+            onChange={(e) => {
               try {
                 const parsed = JSON.parse(e.target.value);
                 handleParameterChange(name, parsed);
@@ -122,7 +115,7 @@ export function ToolTester({ tool, onBack }: ToolTesterProps) {
           <input
             type="text"
             value={value}
-            onChange={e => handleParameterChange(name, e.target.value)}
+            onChange={(e) => handleParameterChange(name, e.target.value)}
             className="param-input"
             placeholder={paramSchema.description || `Enter ${name}...`}
           />
@@ -163,9 +156,7 @@ export function ToolTester({ tool, onBack }: ToolTesterProps) {
             {tool.complexity && (
               <div className="detail-item">
                 <strong>Complexidade:</strong>
-                <span className={`complexity-badge ${tool.complexity}`}>
-                  {tool.complexity}
-                </span>
+                <span className={`complexity-badge ${tool.complexity}`}>{tool.complexity}</span>
               </div>
             )}
             {tool.reliabilityScore !== undefined && (
@@ -181,14 +172,12 @@ export function ToolTester({ tool, onBack }: ToolTesterProps) {
           <h3>⚙️ Parâmetros</h3>
           {parameterNames.length > 0 ? (
             <div className="parameters-form">
-              {parameterNames.map(name => (
+              {parameterNames.map((name) => (
                 <div key={name} className="parameter-field">
                   <label className="parameter-label">
                     <strong>{name}</strong>
                     {schema[name].description && (
-                      <span className="param-description">
-                        {schema[name].description}
-                      </span>
+                      <span className="param-description">{schema[name].description}</span>
                     )}
                     <span className="param-type">{schema[name].type}</span>
                   </label>
@@ -200,20 +189,14 @@ export function ToolTester({ tool, onBack }: ToolTesterProps) {
             <p className="no-params">Esta ferramenta não requer parâmetros.</p>
           )}
 
-          <button
-            onClick={handleExecute}
-            disabled={executing}
-            className="execute-btn"
-          >
+          <button onClick={handleExecute} disabled={executing} className="execute-btn">
             {executing ? '⏳ Executando...' : '▶️ Executar Ferramenta'}
           </button>
         </section>
 
         {result && (
           <section className="results-section">
-            <h3>
-              {result.status === 'success' ? '✅ Resultado' : '❌ Erro'}
-            </h3>
+            <h3>{result.status === 'success' ? '✅ Resultado' : '❌ Erro'}</h3>
 
             <div className="result-meta">
               <span>
@@ -223,8 +206,7 @@ export function ToolTester({ tool, onBack }: ToolTesterProps) {
                 <strong>Tempo:</strong> {result.executionTime}ms
               </span>
               <span>
-                <strong>Timestamp:</strong>{' '}
-                {new Date(result.timestamp).toLocaleString()}
+                <strong>Timestamp:</strong> {new Date(result.timestamp).toLocaleString()}
               </span>
             </div>
 

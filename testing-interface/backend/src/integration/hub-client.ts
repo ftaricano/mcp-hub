@@ -26,7 +26,10 @@ export class HubClient {
   private lastUpdate: number = 0;
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   private requestId = 0;
-  private pendingRequests: Map<number, { resolve: (value: any) => void; reject: (error: any) => void }> = new Map();
+  private pendingRequests: Map<
+    number,
+    { resolve: (value: any) => void; reject: (error: any) => void }
+  > = new Map();
   private buffer = '';
   private readonly hubRoot: string;
   private readonly hubEntryPath: string;
@@ -55,19 +58,19 @@ export class HubClient {
     console.log('🚀 Starting MCP Hub process...');
 
     // Load Hub's .env file to get credentials if present
-    const hubEnv = existsSync(this.hubEnvPath)
-      ? config({ path: this.hubEnvPath })
-      : { parsed: {} };
+    const hubEnv = existsSync(this.hubEnvPath) ? config({ path: this.hubEnvPath }) : { parsed: {} };
 
-    console.log(`📋 Loaded ${Object.keys(hubEnv.parsed || {}).length} environment variables from Hub .env`);
+    console.log(
+      `📋 Loaded ${Object.keys(hubEnv.parsed || {}).length} environment variables from Hub .env`
+    );
 
     this.hubProcess = spawn('node', [this.hubEntryPath], {
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
         ...process.env,
         ...hubEnv.parsed,
-        HUB_CONFIG: this.hubConfigPath
-      }
+        HUB_CONFIG: this.hubConfigPath,
+      },
     });
 
     // Handle stdout (JSON-RPC responses)
@@ -89,7 +92,7 @@ export class HubClient {
     });
 
     // Wait for initialization
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Initialize connection
     await this.sendRequest('initialize', {
@@ -97,8 +100,8 @@ export class HubClient {
       capabilities: {},
       clientInfo: {
         name: 'MCP Hub Testing Interface',
-        version: '1.0.0'
-      }
+        version: '1.0.0',
+      },
     });
 
     console.log('✅ Hub process ready');
@@ -156,7 +159,7 @@ export class HubClient {
       jsonrpc: '2.0',
       id,
       method,
-      params
+      params,
     };
 
     return new Promise((resolve, reject) => {
@@ -199,9 +202,9 @@ export class HubClient {
     const now = Date.now();
 
     // Return cached tools if fresh
-    if (this.toolsCache.size > 0 && (now - this.lastUpdate) < this.CACHE_TTL) {
+    if (this.toolsCache.size > 0 && now - this.lastUpdate < this.CACHE_TTL) {
       const allTools: ToolInfo[] = [];
-      this.toolsCache.forEach(tools => allTools.push(...tools));
+      this.toolsCache.forEach((tools) => allTools.push(...tools));
       return allTools;
     }
 
@@ -219,7 +222,9 @@ export class HubClient {
       console.log(`✅ Found ${result.tools.length} tools from Hub`);
 
       // Convert MCP tools to our format
-      const allTools: ToolInfo[] = result.tools.map((tool: any) => this.convertMCPToolToToolInfo(tool));
+      const allTools: ToolInfo[] = result.tools.map((tool: any) =>
+        this.convertMCPToolToToolInfo(tool)
+      );
 
       // Update cache
       this.toolsCache.clear();
@@ -238,7 +243,6 @@ export class HubClient {
 
       this.lastUpdate = now;
       return allTools;
-
     } catch (error: any) {
       console.error('Failed to discover tools:', error);
       throw error;
@@ -252,14 +256,14 @@ export class HubClient {
     // Check cache first
     if (this.toolsCache.has(serverId)) {
       const cached = this.toolsCache.get(serverId)!;
-      if ((Date.now() - this.lastUpdate) < this.CACHE_TTL) {
+      if (Date.now() - this.lastUpdate < this.CACHE_TTL) {
         return cached;
       }
     }
 
     // Discover all tools and filter by server
     const allTools = await this.discoverAllTools();
-    return allTools.filter(tool => tool.serverId === serverId);
+    return allTools.filter((tool) => tool.serverId === serverId);
   }
 
   /**
@@ -275,12 +279,11 @@ export class HubClient {
     try {
       const result = await this.sendRequest('tools/call', {
         name: toolName,
-        arguments: parameters
+        arguments: parameters,
       });
 
       console.log(`✅ Tool executed successfully`);
       return result;
-
     } catch (error: any) {
       console.error(`❌ Tool execution failed:`, error);
       throw error;
@@ -352,12 +355,12 @@ export class HubClient {
   private determineCategory(serverId: string, toolName: string): string {
     // Server-based categories
     const serverCategories: Record<string, string> = {
-      'spotify': 'Media',
-      'youtube': 'Media',
-      'outlook-fernando': 'Communication',
-      'trello': 'Productivity',
-      'notion': 'Productivity',
-      'codex': 'Development',
+      spotify: 'Media',
+      youtube: 'Media',
+      'email-primary': 'Communication',
+      trello: 'Productivity',
+      notion: 'Productivity',
+      codex: 'Development',
     };
 
     if (serverCategories[serverId]) {
@@ -366,13 +369,27 @@ export class HubClient {
 
     // Keyword-based categories
     const toolLower = toolName.toLowerCase();
-    if (toolLower.includes('email') || toolLower.includes('mail') || toolLower.includes('message')) {
+    if (
+      toolLower.includes('email') ||
+      toolLower.includes('mail') ||
+      toolLower.includes('message')
+    ) {
       return 'Communication';
     }
-    if (toolLower.includes('music') || toolLower.includes('track') || toolLower.includes('play') || toolLower.includes('video')) {
+    if (
+      toolLower.includes('music') ||
+      toolLower.includes('track') ||
+      toolLower.includes('play') ||
+      toolLower.includes('video')
+    ) {
       return 'Media';
     }
-    if (toolLower.includes('board') || toolLower.includes('card') || toolLower.includes('task') || toolLower.includes('page')) {
+    if (
+      toolLower.includes('board') ||
+      toolLower.includes('card') ||
+      toolLower.includes('task') ||
+      toolLower.includes('page')
+    ) {
       return 'Productivity';
     }
     if (toolLower.includes('code') || toolLower.includes('chat') || toolLower.includes('execute')) {

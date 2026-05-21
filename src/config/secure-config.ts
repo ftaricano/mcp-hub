@@ -22,32 +22,40 @@ const ServerConfigSchema = z.object({
   enabled: z.boolean().default(true),
   timeout: z.number().default(60000),
   retries: z.number().default(3),
-  toolCallRetries: z.object({
-    enabled: z.boolean().default(false),
-    maxAttempts: z.number().min(1).default(1),
-    retryableTools: z.array(z.string()).default([]),
-  }).optional(),
+  toolCallRetries: z
+    .object({
+      enabled: z.boolean().default(false),
+      maxAttempts: z.number().min(1).default(1),
+      retryableTools: z.array(z.string()).default([]),
+    })
+    .optional(),
   tags: z.array(z.string()).default([]),
 });
 
 const HubConfigSchema = z.object({
   servers: z.array(ServerConfigSchema),
-  cache: z.object({
-    enabled: z.boolean().default(true),
-    ttl: z.number().default(600000),
-    youtube_transcription_ttl: z.number().default(3600000),
-    token_cache_ttl: z.number().default(86400000),
-  }).default({}),
-  security: z.object({
-    rate_limit: z.number().default(200),
-    validate_schemas: z.boolean().default(true),
-    youtube_rate_limit: z.number().default(50),
-    youtube_quota_management: z.boolean().default(true),
-  }).default({}),
-  logging: z.object({
-    level: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
-    format: z.enum(['json', 'pretty']).default('json'),
-  }).default({}),
+  cache: z
+    .object({
+      enabled: z.boolean().default(true),
+      ttl: z.number().default(600000),
+      youtube_transcription_ttl: z.number().default(3600000),
+      token_cache_ttl: z.number().default(86400000),
+    })
+    .default({}),
+  security: z
+    .object({
+      rate_limit: z.number().default(200),
+      validate_schemas: z.boolean().default(true),
+      youtube_rate_limit: z.number().default(50),
+      youtube_quota_management: z.boolean().default(true),
+    })
+    .default({}),
+  logging: z
+    .object({
+      level: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
+      format: z.enum(['json', 'pretty']).default('json'),
+    })
+    .default({}),
 });
 
 export type ServerConfig = z.infer<typeof ServerConfigSchema>;
@@ -72,7 +80,7 @@ export class SecureConfigLoader {
       fallbackToEnv: true,
       ...options,
     };
-    
+
     this.credentialsManager = createCredentialsManager(this.options.environment);
   }
 
@@ -111,7 +119,7 @@ export class SecureConfigLoader {
         return JSON.parse(configContent);
       } catch (error) {
         console.warn(`⚠️ Could not load config from ${this.options.configPath}: ${error}`);
-        
+
         if (!this.options.fallbackToEnv) {
           throw new Error(`Configuration file required but not found: ${this.options.configPath}`);
         }
@@ -133,7 +141,7 @@ export class SecureConfigLoader {
       if (server.enabled) {
         // Get secure environment variables for this server
         const secureEnv = this.credentialsManager.getServerEnvironment(server.id);
-        
+
         // Remove any hardcoded credentials and replace with secure ones
         server.env = {
           ...this.sanitizeEnvironment(server.env),
@@ -168,11 +176,13 @@ export class SecureConfigLoader {
 
     for (const [key, value] of Object.entries(env)) {
       // Skip credential keys or obvious placeholder values
-      if (credentialKeys.has(key) || 
-          value.includes('YOUR_') || 
-          value.includes('SEU_') ||
-          value === 'your_token_here' ||
-          value === 'your_client_secret_here') {
+      if (
+        credentialKeys.has(key) ||
+        value.includes('YOUR_') ||
+        value.includes('SEU_') ||
+        value === 'your_token_here' ||
+        value === 'your_client_secret_here'
+      ) {
         console.warn(`🔒 Removing hardcoded credential: ${key}`);
         continue;
       }
@@ -199,25 +209,23 @@ export class SecureConfigLoader {
    * Validate that all required credentials are available
    */
   private validateCredentials(config: HubConfig): void {
-    const enabledServers = config.servers
-      .filter(s => s.enabled)
-      .map(s => s.id);
+    const enabledServers = config.servers.filter((s) => s.enabled).map((s) => s.id);
 
     const validation = this.credentialsManager.validateCredentials(enabledServers);
 
     if (!validation.valid) {
       console.error('❌ Missing required credentials:');
-      validation.missing.forEach(missing => console.error(`   - ${missing}`));
-      
+      validation.missing.forEach((missing) => console.error(`   - ${missing}`));
+
       console.log('\n📝 To fix this, add the missing credentials to your environment:');
       console.log(this.credentialsManager.generateSecureConfig());
-      
+
       throw new Error(`Missing required credentials: ${validation.missing.join(', ')}`);
     }
 
     if (validation.warnings.length > 0) {
       console.warn('⚠️ Credential warnings:');
-      validation.warnings.forEach(warning => console.warn(`   - ${warning}`));
+      validation.warnings.forEach((warning) => console.warn(`   - ${warning}`));
     }
 
     console.log(`✅ All credentials validated for ${enabledServers.length} enabled servers`);
@@ -278,10 +286,10 @@ export class SecureConfigLoader {
 
     // Create sanitized version without credentials
     const sanitizedConfig = JSON.parse(JSON.stringify(this.config));
-    
+
     for (const server of sanitizedConfig.servers) {
       server.env = this.sanitizeEnvironment(server.env);
-      
+
       // Add placeholder comments for required credentials
       if (server.enabled) {
         const requiredCreds = this.getRequiredCredentials(server.id);
@@ -294,11 +302,7 @@ export class SecureConfigLoader {
     const dir = path.dirname(filePath);
     await fs.mkdir(dir, { recursive: true });
 
-    await fs.writeFile(
-      filePath,
-      JSON.stringify(sanitizedConfig, null, 2),
-      { mode: 0o600 }
-    );
+    await fs.writeFile(filePath, JSON.stringify(sanitizedConfig, null, 2), { mode: 0o600 });
 
     console.log(`✅ Saved sanitized configuration to: ${filePath}`);
   }
@@ -308,14 +312,22 @@ export class SecureConfigLoader {
    */
   private getRequiredCredentials(serverId: string): string[] {
     const requirements: Record<string, string[]> = {
-      'trello': ['TRELLO_API_KEY', 'TRELLO_TOKEN'],
-      'email-advanced': ['MICROSOFT_GRAPH_CLIENT_ID', 'MICROSOFT_GRAPH_CLIENT_SECRET', 'MICROSOFT_GRAPH_TENANT_ID'],
-      'onedrive-sharepoint': ['MICROSOFT_GRAPH_CLIENT_ID', 'MICROSOFT_GRAPH_CLIENT_SECRET', 'MICROSOFT_GRAPH_TENANT_ID'],
-      'spotify': ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET'],
-      'youtube': ['YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET'],
-      'github': ['GITHUB_TOKEN'],
-      'notion': ['NOTION_TOKEN'],
-      'whatsapp': ['WHATSAPP_ACCESS_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID'],
+      trello: ['TRELLO_API_KEY', 'TRELLO_TOKEN'],
+      'email-advanced': [
+        'MICROSOFT_GRAPH_CLIENT_ID',
+        'MICROSOFT_GRAPH_CLIENT_SECRET',
+        'MICROSOFT_GRAPH_TENANT_ID',
+      ],
+      'onedrive-sharepoint': [
+        'MICROSOFT_GRAPH_CLIENT_ID',
+        'MICROSOFT_GRAPH_CLIENT_SECRET',
+        'MICROSOFT_GRAPH_TENANT_ID',
+      ],
+      spotify: ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET'],
+      youtube: ['YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET'],
+      github: ['GITHUB_TOKEN'],
+      notion: ['NOTION_TOKEN'],
+      whatsapp: ['WHATSAPP_ACCESS_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID'],
     };
 
     return requirements[serverId] || [];

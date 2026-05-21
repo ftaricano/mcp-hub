@@ -30,9 +30,9 @@ app.get('/api/health', (req, res) => {
     data: {
       status: 'healthy',
       uptime: process.uptime(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
   res.json(response);
 });
@@ -47,9 +47,9 @@ app.use((req, res) => {
     success: false,
     error: {
       code: 'NOT_FOUND',
-      message: `Route ${req.method} ${req.path} not found`
+      message: `Route ${req.method} ${req.path} not found`,
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
   res.status(404).json(response);
 });
@@ -62,9 +62,9 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     success: false,
     error: {
       code: 'INTERNAL_ERROR',
-      message: err.message || 'An unexpected error occurred'
+      message: err.message || 'An unexpected error occurred',
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 
   res.status(500).json(response);

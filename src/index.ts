@@ -31,10 +31,13 @@ import { summarizeToolArguments } from './utils/redaction.js';
 const config = loadConfig();
 const logger = createLogger(config.logging.level, config.logging.format);
 
-function inferCacheContext(serverId: string, toolName: string, description?: string, tags?: string[]): string {
-  const tokens = [serverId, toolName, description || '', ...(tags || [])]
-    .join(' ')
-    .toLowerCase();
+function inferCacheContext(
+  serverId: string,
+  toolName: string,
+  description?: string,
+  tags?: string[]
+): string {
+  const tokens = [serverId, toolName, description || '', ...(tags || [])].join(' ').toLowerCase();
 
   if (/(email|mail|inbox|outlook|message)/.test(tokens)) {
     return 'email';
@@ -99,7 +102,7 @@ class MCPHub {
         logger.info(`Found ${allServerTools.length} tools from registered servers`);
 
         // Convert registry tools to MCP SDK format
-        const serverTools = allServerTools.map(tool => {
+        const serverTools = allServerTools.map((tool) => {
           // Ensure schema has type: "object"
           const schema = tool.schema || {};
           return {
@@ -144,11 +147,16 @@ class MCPHub {
           },
           {
             name: 'smart-search',
-            description: 'Busca inteligente de ferramentas em português com análise de intenção e recomendações contextuais',
+            description:
+              'Busca inteligente de ferramentas em português com análise de intenção e recomendações contextuais',
             inputSchema: {
               type: 'object' as const,
               properties: {
-                query: { type: 'string', description: 'Consulta em português (ex: "enviar email", "tocar música", "criar tarefa")' },
+                query: {
+                  type: 'string',
+                  description:
+                    'Consulta em português (ex: "enviar email", "tocar música", "criar tarefa")',
+                },
                 context: { type: 'string', description: 'Contexto adicional (opcional)' },
                 limit: { type: 'number', default: 5, description: 'Máximo de resultados' },
               },
@@ -157,13 +165,25 @@ class MCPHub {
           },
           {
             name: 'get-recommendations',
-            description: 'Obtém recomendações e ferramentas relacionadas baseadas no uso e contexto',
+            description:
+              'Obtém recomendações e ferramentas relacionadas baseadas no uso e contexto',
             inputSchema: {
               type: 'object' as const,
               properties: {
-                category: { type: 'string', description: 'Categoria (Comunicação, Entretenimento, Produtividade, etc.)' },
-                recent: { type: 'boolean', default: false, description: 'Mostrar ferramentas usadas recentemente' },
-                popular: { type: 'boolean', default: true, description: 'Mostrar ferramentas populares' },
+                category: {
+                  type: 'string',
+                  description: 'Categoria (Comunicação, Entretenimento, Produtividade, etc.)',
+                },
+                recent: {
+                  type: 'boolean',
+                  default: false,
+                  description: 'Mostrar ferramentas usadas recentemente',
+                },
+                popular: {
+                  type: 'boolean',
+                  default: true,
+                  description: 'Mostrar ferramentas populares',
+                },
               },
             },
           },
@@ -172,7 +192,9 @@ class MCPHub {
         // Combine hub tools + all server tools
         const allTools = [...hubTools, ...serverTools] as any[];
 
-        logger.info(`Returning ${allTools.length} total tools (4 hub + ${serverTools.length} from servers)`);
+        logger.info(
+          `Returning ${allTools.length} total tools (4 hub + ${serverTools.length} from servers)`
+        );
 
         return {
           tools: allTools,
@@ -207,11 +229,11 @@ class MCPHub {
         throw new ToolNotFoundError('hub', request.params.name);
       } catch (error) {
         logger.error('Error in call-tool:', error);
-        
+
         if (error instanceof HubError) {
           throw error;
         }
-        
+
         throw new HubError('Tool execution failed', 'TOOL_EXECUTION_ERROR', {
           toolName: request.params.name,
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -222,25 +244,21 @@ class MCPHub {
 
   private async handleListAllTools(args: unknown): Promise<CallToolResult> {
     const params = ListToolsParamsSchema.parse(args);
-    
+
     logger.info('Listing tools with params:', params);
-    
+
     // Get tools from registry with caching
     let allTools = this.cache.getAllCachedTools();
-    
+
     if (allTools.length === 0) {
       // Cache miss, refresh from registry
       await this.registry.refreshAll();
       allTools = this.registry.getAllTools();
     }
-    
+
     // Apply filters
-    const filteredTools = this.registry.filterTools(
-      params.query,
-      params.tags,
-      params.server_id
-    );
-    
+    const filteredTools = this.registry.filterTools(params.query, params.tags, params.server_id);
+
     // Add hub's own tools
     const hubTools = [
       {
@@ -267,7 +285,8 @@ class MCPHub {
         server_id: 'hub',
         server_name: 'MCP Hub',
         tool_name: 'smart-search',
-        description: 'Busca inteligente de ferramentas em português com análise de intenção e recomendações contextuais',
+        description:
+          'Busca inteligente de ferramentas em português com análise de intenção e recomendações contextuais',
         schema: {},
         tags: ['hub', 'intelligent', 'português'],
         enabled: true,
@@ -284,14 +303,14 @@ class MCPHub {
         last_seen: new Date(),
       },
     ];
-    
+
     const allToolsWithHub = [...filteredTools, ...hubTools];
-    
+
     // Apply pagination
     const start = params.offset || 0;
     const limit = params.limit || 50;
     const paginatedTools = allToolsWithHub.slice(start, start + limit);
-    
+
     const response: ListToolsResponse = {
       total: allToolsWithHub.length,
       items: paginatedTools,
@@ -311,7 +330,7 @@ class MCPHub {
   private async handleCallTool(args: unknown): Promise<CallToolResult> {
     const params = CallToolParamsSchema.parse(args);
     const argumentSummary = summarizeToolArguments(params.arguments);
-    
+
     logger.info('Calling tool:', {
       serverId: params.server_id,
       toolName: params.tool_name,
@@ -319,24 +338,27 @@ class MCPHub {
       redactedKeys: argumentSummary.sensitiveKeys,
     });
     const startTime = Date.now();
-    
+
     // Log tool call to debug logger
     debugLogger.log(`Calling ${params.server_id}/${params.tool_name}`, 'info');
-    
+
     const toolKey = `${params.server_id}/${params.tool_name}`;
-    
+
     // Check cache first (both old and intelligent cache)
     const argsHash = this.cache.createArgsHash(params.arguments);
     const cached = this.cache.getToolResult(params.server_id, params.tool_name, argsHash);
-    
+
     if (cached) {
-      logger.info('Returning cached result:', { serverId: params.server_id, toolName: params.tool_name });
+      logger.info('Returning cached result:', {
+        serverId: params.server_id,
+        toolName: params.tool_name,
+      });
       // Update intelligent cache stats for cache hit
       const responseTime = Date.now() - startTime;
       intelligentCache.recordToolUsage(toolKey, responseTime, true);
       return cached;
     }
-    
+
     // Route to actual server
     try {
       const result = await this.registry.callTool(
@@ -344,20 +366,20 @@ class MCPHub {
         params.tool_name,
         params.arguments
       );
-      
+
       const responseTime = Date.now() - startTime;
-      
+
       // Cache successful results (both caches)
       this.cache.setToolResult(params.server_id, params.tool_name, argsHash, result);
-      
+
       // Record usage in intelligent cache
       intelligentCache.recordToolUsage(toolKey, responseTime, true);
-      
+
       // Cache result in intelligent cache with context
       const serverConfig = this.registry.getServerConfig(params.server_id);
       const toolMetadata = this.registry
         .getServerTools(params.server_id)
-        .find(tool => tool.tool_name === params.tool_name);
+        .find((tool) => tool.tool_name === params.tool_name);
       const context = inferCacheContext(
         params.server_id,
         params.tool_name,
@@ -365,31 +387,31 @@ class MCPHub {
         toolMetadata?.tags || serverConfig?.tags
       );
       intelligentCache.set(toolKey + '_' + argsHash, result, undefined, context);
-      
-      logger.info('Tool call successful:', { 
-        serverId: params.server_id, 
-        toolName: params.tool_name, 
-        responseTime: `${responseTime}ms` 
+
+      logger.info('Tool call successful:', {
+        serverId: params.server_id,
+        toolName: params.tool_name,
+        responseTime: `${responseTime}ms`,
       });
-      
+
       return result;
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      
+
       // Record failure in intelligent cache
       intelligentCache.recordToolUsage(toolKey, responseTime, false);
-      
+
       logger.error('Tool call failed:', {
         serverId: params.server_id,
         toolName: params.tool_name,
         error: error instanceof Error ? error.message : 'Unknown error',
-        responseTime: `${responseTime}ms`
+        responseTime: `${responseTime}ms`,
       });
-      
+
       if (error instanceof Error) {
         throw error;
       }
-      
+
       throw new HubError('Tool execution failed', 'TOOL_EXECUTION_ERROR');
     }
   }
@@ -440,9 +462,9 @@ class MCPHub {
         intent: {
           action: intent.action,
           target: intent.target,
-          confidence: intent.confidence
+          confidence: intent.confidence,
         },
-        results: limited.map(result => ({
+        results: limited.map((result) => ({
           server_id: result.server_id,
           tool_name: result.tool_name,
           pt_name: result.pt_name,
@@ -453,15 +475,16 @@ class MCPHub {
           use_cases: result.use_cases,
           typical_params: result.typical_params,
           confidence_score: result.performance_score, // Reutilizado como score de confiança
-          complexity_level: result.complexity_level
+          complexity_level: result.complexity_level,
         })),
         total_found: results.length,
-        suggestions: intent.suggestions?.map(s => ({
-          server_id: s.server_id,
-          tool_name: s.tool_name,
-          pt_name: s.pt_name,
-          reason: 'Sugerido pela análise de intenção'
-        })) || []
+        suggestions:
+          intent.suggestions?.map((s) => ({
+            server_id: s.server_id,
+            tool_name: s.tool_name,
+            pt_name: s.pt_name,
+            reason: 'Sugerido pela análise de intenção',
+          })) || [],
       };
 
       return {
@@ -472,7 +495,6 @@ class MCPHub {
           },
         ],
       };
-
     } catch (error) {
       logger.error('Smart search error:', error);
       throw new HubError('Erro na busca inteligente', 'SMART_SEARCH_ERROR');
@@ -493,43 +515,42 @@ class MCPHub {
       const response: any = {
         categories: ToolIntelligenceSystem.getCategories(),
         stats: ToolIntelligenceSystem.getStats(),
-        cache_stats: intelligentCache.getStats()
+        cache_stats: intelligentCache.getStats(),
       };
 
       // Recomendações por categoria
       if (params.category) {
-        response.category_tools = ToolIntelligenceSystem.getToolsByCategory(params.category)
-          .map(tool => ({
+        response.category_tools = ToolIntelligenceSystem.getToolsByCategory(params.category).map(
+          (tool) => ({
             server_id: tool.server_id,
             tool_name: tool.tool_name,
             pt_name: tool.pt_name,
             pt_description: tool.pt_description,
             reliability_score: tool.reliability_score,
-            complexity_level: tool.complexity_level
-          }));
+            complexity_level: tool.complexity_level,
+          })
+        );
       }
 
       // Ferramentas populares
       if (params.popular) {
-        response.popular_tools = intelligentCache.getMostPopularTools(10)
-          .map(stat => ({
-            tool_key: stat.toolKey,
-            usage_count: stat.usageCount,
-            success_rate: stat.successRate,
-            avg_response_time: stat.avgResponseTime,
-            popularity_score: stat.popularityScore
-          }));
+        response.popular_tools = intelligentCache.getMostPopularTools(10).map((stat) => ({
+          tool_key: stat.toolKey,
+          usage_count: stat.usageCount,
+          success_rate: stat.successRate,
+          avg_response_time: stat.avgResponseTime,
+          popularity_score: stat.popularityScore,
+        }));
       }
 
       // Ferramentas recentes
       if (params.recent) {
-        response.recent_tools = intelligentCache.getRecentlyUsedTools(5)
-          .map(stat => ({
-            tool_key: stat.toolKey,
-            last_used: new Date(stat.lastUsed).toISOString(),
-            usage_count: stat.usageCount,
-            success_rate: stat.successRate
-          }));
+        response.recent_tools = intelligentCache.getRecentlyUsedTools(5).map((stat) => ({
+          tool_key: stat.toolKey,
+          last_used: new Date(stat.lastUsed).toISOString(),
+          usage_count: stat.usageCount,
+          success_rate: stat.successRate,
+        }));
       }
 
       return {
@@ -540,7 +561,6 @@ class MCPHub {
           },
         ],
       };
-
     } catch (error) {
       logger.error('Recommendations error:', error);
       throw new HubError('Erro ao obter recomendações', 'RECOMMENDATIONS_ERROR');
@@ -561,12 +581,12 @@ class MCPHub {
   async start(): Promise<void> {
     // Start debug monitoring
     debugLogger.logStartup();
-    
+
     // Enable live monitoring if DEBUG_MODE is set
     if (process.env.DEBUG_MODE === 'true' || process.env.MCP_DEBUG === 'true') {
       debugLogger.startMonitoring();
     }
-    
+
     logger.info('Starting MCP Hub...');
 
     // Connect MCP transport first so Codex can handshake quickly
@@ -613,7 +633,10 @@ class MCPHub {
         });
 
         // Log summary to console
-        debugLogger.log(`MCP Hub started: ${stats.servers} servers, ${stats.tools} tools`, 'success');
+        debugLogger.log(
+          `MCP Hub started: ${stats.servers} servers, ${stats.tools} tools`,
+          'success'
+        );
       } catch (error) {
         logger.error('Failed to complete MCP Hub startup:', error);
         debugLogger.log(`Failed to start: ${error}`, 'error');

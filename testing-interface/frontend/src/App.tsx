@@ -27,10 +27,7 @@ function App() {
       setLoading(true);
       setError(null);
 
-      const [serversData, toolsData] = await Promise.all([
-        api.getServers(),
-        api.getAllTools()
-      ]);
+      const [serversData, toolsData] = await Promise.all([api.getServers(), api.getAllTools()]);
 
       setServers(serversData.servers);
       setTools(toolsData.tools);
@@ -107,15 +104,9 @@ function App() {
       </header>
 
       <main className="app-main">
-        {currentView === 'dashboard' && (
-          <Dashboard servers={servers} tools={tools} />
-        )}
-        {currentView === 'servers' && (
-          <ServerList servers={servers} onRefresh={loadData} />
-        )}
-        {currentView === 'tools' && (
-          <ToolBrowser tools={tools} onToolSelect={handleToolSelect} />
-        )}
+        {currentView === 'dashboard' && <Dashboard servers={servers} tools={tools} />}
+        {currentView === 'servers' && <ServerList servers={servers} onRefresh={loadData} />}
+        {currentView === 'tools' && <ToolBrowser tools={tools} onToolSelect={handleToolSelect} />}
         {currentView === 'tester' && selectedTool && (
           <ToolTester tool={selectedTool} onBack={() => setCurrentView('tools')} />
         )}
